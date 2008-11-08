@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+	
+	<title>Polygonzo Test</title>
+	
+	<style type="text/css">
+		#all, #all * { font-family: Verdana,Arial,sans-serif; font-size: 16px; }
+		#stateSelector { width: 100%; }
+		#log * { font-size: 14px; }
+	</style>
+	
+	<script type="text/javascript">
+		(function() {
+			GoogleMapsApiKey = {
+				'gigapad': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTCDaeoAnk9GZSdGi854AcXbJXoXRS9QqxqDWHL54Twi5thIIANaCUAeA',
+				'gigapad.local': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTM3oEyKJfFfMe3pRkahPyHmmHL_xSjOVWnaIMs0gtUrFuoOJzsQiPnKA',
+				'mg.to': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRQjDwyFD3YNj60GgWGUlJCU_q5i9hSSSzj0ergKKMY55eRpMa05FE3Wog',
+				'padlet': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRSuIOvo2pGs7VouOPMgaUBd9TDiaBTE5gjPTrifBPED7VUFoeKD_Ysmkw',
+				'padlet.local': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTbToHSggDWprRoD6gaXq5geEyxiBTRRmW6BwPHdCzJ2mh90uajjkpAOA',
+				's.mg.to': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRQ9jbX8zKuYy1oz9F5p7GBNeAnoJRS9Itc8RizuhplTF59tia4NLgrdHQ',
+				'': ''
+			}[location.host];
+			
+			document.write(
+				'<script type="text/javascript" src="http://www.google.com/jsapi?key=', GoogleMapsApiKey, '">',
+				'<\/script>'
+			);
+		})();	
+	</script>
+	
+	<script type="text/javascript">
+		google.load( 'jquery', '1.2.6' );
+		google.load( 'maps', '2' );
+	</script>
+	
+	<script type="text/javascript">
+		function log() {
+			var text = Array.prototype.join.call( arguments, ' ' );
+			var elapsed = +new Date - log.time;
+			$('#log').append( [
+				'<div style="position:relative;">',
+					'<div style="float:left; text-align:right; width:4.5em;">',
+						( elapsed / 1000 ).toFixed(3),
+					'</div>',
+					'<div style="float:left; padding-left:12px;">',
+						text,
+					'</div>',
+					'<div style="clear:left;">',
+					'</div>',
+				'</div>'
+			].join('') );
+			log.time = +new Date;
+		}
+		log.reset = function() {
+			$('#log').empty();
+			log.time = +new Date;
+		};
+		log.reset();
+		_log = log;
+	</script>
+	
+	<script type="text/javascript" src="polygonzo.js"></script>
+	<script type="text/javascript" src="polymap.js"></script>
+	<script type="text/javascript" src="testmap.js"></script>
+	
+</head>
+<body>
+	
+	<div style="padding:8px;">
+		<div id="all" style="width:1101px; height:700px; border:1px solid #AAA;">
+			
+			<div style="float:left;">
+				<div id="testmap" style="width:700px; height:700px; border-right:1px solid #AAA;">
+				</div>
+			</div>
+			
+			<div style="float:left; width:400px;">
+				<div style="background-color:#EEE; padding:6px; border-bottom:1px solid #AAA;">
+					<div style="margin-bottom:6px;">
+						<script type="text/javascript">
+							if( $.browser.mozilla && window.console && console.log ) {
+								document.write(
+									'<div style="color:red; padding-bottom:8px;">',
+										'<b>Disable Firebug</b> for faster performance',
+									'</div>'
+								);
+							}
+							document.write( stateSelector() );
+						</script>
+					</div>
+					
+					<div>
+						<input type="checkbox" id="chkAnimate" notchecked="checked">
+						<label for="chkAnimate">Animate</label>
+						
+						<!--<input type="checkbox" id="chkSubpixel" checked="checked">-->
+						<!--<label for="chkSubpixel">Subpixel</label>-->
+					</div>
+				
+				</div>
+				
+				<div id="status" style="height:3em; margin:6px; border-bottom:1px solid #CCC;">
+				</div>
+				
+				<div id="log" style="font-family:Consolas,Courier New,monospace;">
+				</div>
+				
+			</div>
+			
+			<div style="clear:left">
+			</div>
+			
+		</div>
+		
+	</div>
+
+</body>
+</html>
