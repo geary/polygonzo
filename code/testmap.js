@@ -63,7 +63,7 @@ function load() {
 	
 	var pm = new PolyMap({
 		container: $('#testmap')[0],
-		shapes: '../shapes/',
+		shapes: '../shapes/json/',
 		events: {
 			load: function( region_ ) {
 				region = region_;
