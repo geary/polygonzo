@@ -62,15 +62,15 @@ PolyGonzo = {
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
 				
-				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth, round ) {
+				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					var c = ctx;
 					c.beginPath();
 					
 					var coord = coords[0];
-					c.moveTo( round( coord[0] + offsetX ) + .5, round( coord[1] + offsetY ) + .5 );
+					c.moveTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
 					
 					for( var iCoord = 0, coord;  coord = coords[++iCoord]; ) {
-						c.lineTo( round( coord[0] + offsetX ) + .5, round( coord[1] + offsetY ) + .5 );
+						c.lineTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
 					}
 					c.closePath();
 					
@@ -88,18 +88,18 @@ PolyGonzo = {
 				tracker.nextSibling && canvas.removeChild( tracker.nextSibling );
 				
 				var vml = [], iVml = 0;
-				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth, round ) {
+				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					
 					vml[iVml++] = '<pgz_vml_:shape style="position:absolute;width:10;height:10;" coordorigin="';
-					vml[iVml++] = -round( offsetX * 10 );
+					vml[iVml++] = -~~( offsetX * 10 - .5 );
 					vml[iVml++] = ' ';
-					vml[iVml++] = -round( offsetY * 10 );
+					vml[iVml++] = -~~( offsetY * 10 - .5 );
 					vml[iVml++] = '" coordsize="100 100" path=" m ';
 					
 					for( var iCoord = -1, coord;  coord = coords[++iCoord]; ) {
-						vml[iVml++] = round( coord[0] * 10 );
+						vml[iVml++] = ~~( coord[0] * 10 );
 						vml[iVml++] = ',';
-						vml[iVml++] = round( coord[1] * 10 );
+						vml[iVml++] = ~~( coord[1] * 10);
 						vml[iVml++] = ' l ';
 					}
 					
@@ -143,7 +143,7 @@ PolyGonzo = {
 			var place = { shapes: [ shape ] };
 			eachShape( [ place ], zoom, offset || { x:0, y:0 }, function() {} );
 			var coord = shape.coords[zoom][0];
-			return { x: Math.round(coord[0]), y: Math.round(coord[1]) };
+			return { x: ~~coord[0], y: ~~coord[1] };
 		};
 		
 		function onetime() {
@@ -155,7 +155,7 @@ PolyGonzo = {
 		}
 		
 		function eachShape( places, zoom, offset, callback ) {
-			var pi = Math.PI, log = Math.log, round = Math.round, sin = Math.sin,
+			var pi = Math.PI, log = Math.log, sin = Math.sin,
 				big = 1 << 28,
 				big180 = big / 180,
 				pi180 = pi / 180,
@@ -203,7 +203,7 @@ PolyGonzo = {
 							];
 						}
 					}
-					callback( offsetX, offsetY, place, shape, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth, round );
+					callback( offsetX, offsetY, place, shape, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 				}
 			}
 			
