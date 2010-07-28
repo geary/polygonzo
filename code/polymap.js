@@ -33,6 +33,14 @@ PolyMap = function( a ) {
 		
 		redraw: function( b ) {
 			drawPolys();
+		},
+		
+		addMarker: function( marker ) {
+			map.addOverlay( marker );
+		},
+		
+		removeMarker: function( marker ) {
+			map.removeOverlay( marker );
 		}
 	});
 };

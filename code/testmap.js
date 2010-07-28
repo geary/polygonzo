@@ -59,7 +59,7 @@ function optionHTML( value, name, selected, disabled ) {
 })();
 
 function load() {
-	var state, region, frameStart;
+	var state, region, frameStart, marker;
 	
 	var pm = new PolyMap({
 		container: $('#testmap')[0],
@@ -87,6 +87,15 @@ function load() {
 			},
 			over: function( feature ) {
 				$('#status').html( featureName(feature) );
+				if( marker ) {
+					pm.removeMarker( marker );
+					marker = null;
+				}
+				if( feature ) {
+					var centroid = feature.properties.centroid;
+					marker = new GMarker( new GLatLng( centroid[1], centroid[0] ) );
+					pm.addMarker( marker );
+				}
 			},
 			click: function( feature ) {
 				alert( 'Clicked ' + featureName(feature) );
