@@ -315,7 +315,7 @@ function zoomToBounds( bounds ) {
 
 function stateReady( state ) {
 	delete pm.overWhere;
-	var county = opt.county && state.places.by_fips[opt.county];
+	var county = opt.county && state.geo.features.by_fips[opt.county];
 	//if( ! mapplet ) map.checkResize();
 	//map.clearOverlays();
 	//$('script[title=jsonresult]').remove();
@@ -338,15 +338,20 @@ function stateReady( state ) {
 		// Let map display before drawing polys
 		setTimeout( function() {
 			trigger( 'load', state );
+			var geo = county ? [ county ] : state.geo;
 			gonzo = new PolyGonzo.GOverlay({
 				//group: state,
-				places: county ? [ county ] : state.places,
+				geo: geo,
 				events: {
 					mousemove: function( event, where ) {
-						trigger( 'over', where && where.place );
+						var feature = where && where.feature;
+						if( feature ) feature.container = geo;
+						trigger( 'over', feature );
 					},
 					click: function( event, where ) {
-						trigger( 'click', where.place );
+						var feature = where && where.feature;
+						if( feature ) feature.container = geo;
+						trigger( 'click', feature );
 					}
 				}
 			});
@@ -417,9 +422,8 @@ function loadState() {
 	}
 	else {
 		$.getJSON( ( pm.a.shapes || 'shapes/' ) + abbr.toLowerCase() + '.json', function( json ) {
-			var p = json.places;
-			state.places = p.state || p.county || p.district;
-			if( state != stateUS ) state.places.indexBy('fips');
+			state.geo = json;
+			if( state != stateUS ) json.features.indexBy('fips');
 			log.reset();
 			//log( 'got JSON ', abbr );
 			if( state == stateUS ) loadBounds( json );
@@ -429,8 +433,8 @@ function loadState() {
 }
 
 function loadBounds( json ) {
-	json.places.state.forEach( function( place ) {
-		stateByAbbr(place.state).bounds = place.bounds;
+	json.features.forEach( function( feature ) {
+		stateByAbbr(feature.properties.abbr).bbox = feature.bbox;
 	});
 }
 

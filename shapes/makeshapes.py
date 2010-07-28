@@ -42,10 +42,10 @@ states.byNumber = {}
 
 useOther = {
 	'CT': ( 'town', 'cs09_d00' ),
-	'ME': ( 'town', 'cs23_d00' ),
+	#'ME': ( 'town', 'cs23_d00' ),
 	'MA': ( 'town', 'cs25_d00' ),
 	'NH': ( 'town', 'cs33_d00' ),
-	'RI': ( 'town', 'cs44_d00' ),
+	#'RI': ( 'town', 'cs44_d00' ),
 	'VT': ( 'town', 'cs50_d00' ),
 	#
 	#'KS': ( 'district', 'cd20_110' ),
@@ -138,13 +138,7 @@ def readShapefile( type, filename ):
 			for j in xrange(n):
 				point = points[j]
 				pts.append( '[%.4f,%.4f]' %( point[0], point[1] ) )
-			shapes.append( '{"area":%.4f,"bounds":[[%.4f,%.4f],[%.4f,%.4f]],"centroid":[%.4f,%.4f],"points":[%s]}' %(
-				area,
-				bounds[0][0], bounds[0][1], 
-				bounds[1][0], bounds[1][1], 
-				centroid[0], centroid[1],
-				','.join(pts)
-			) )
+			shapes.append( '[[%s]]' %( ','.join(pts) ) )
 		bounds = place['bounds']
 		center = getCenter( bounds[0][1], bounds[0][0], bounds[1][1], bounds[1][0] )
 		place['center'] = [ center[1], center[0] ]
@@ -199,18 +193,22 @@ def writeStates( places, path ):
 		writeJSON( path, 'state', state['abbr'].lower(), state['json'] )
 
 def writeJSON( path, type, abbr, json ):
-	file = 'shapes/%s.json' % abbr
+	file = 'json/%s.json' % abbr
 	print 'Writing %s' % file
 	types = []
 	for t in json:
-		types.append( '\n\t\t"%s": [\n\t\t\t%s\n\t\t]' %( t, ',\n\t\t\t'.join(json[t]) ) )
-	writeFile( file, '''{
-	"abbr": "%s",
-	"type": "%s",
-	"places": {%s
-	}
+		types.append( '\n\t\t%s\n\t\t' %( ',\n\t\t'.join(json[t]) ) )
+	writeFile( file,
+'''{
+	"type": "FeatureCollection",
+	"properties": {
+		"kind": "%s",
+		"abbr": "%s"
+	},
+	"features": [%s
+	]
 }
-''' %( abbr, type, ','.join(types) ) )
+''' %( type, abbr, ','.join(types) ) )
 
 def getPlaceJSON( places, key, state, type ):
 	place = places[key]
@@ -218,17 +216,19 @@ def getPlaceJSON( places, key, state, type ):
 	bounds = place['bounds']
 	center = place['center']
 	centroid = place['centroid']
-	return '{"type":"%s","state":"%s","name":"%s","bounds":[[%.4f,%.4f],[%.4f,%.4f]],"center":[%.4f,%.4f],"centroid":[%.4f,%.4f],"shapes":[%s]}' %(
-		type, state, key.split(keysep)[2],
+	if type == "state": abbr = '"abbr":"%s",' % state
+	else: abbr = ''
+	return '{"type":"Feature","bbox":[%.4f,%.4f,%.4f,%.4f],"properties":{"kind":"%s",%s"name":"%s","center":[%.4f,%.4f],"centroid":[%.4f,%.4f]},"geometry":{"type":"MultiPolygon","coordinates":[%s]}}' %(
 		bounds[0][0], bounds[0][1], 
 		bounds[1][0], bounds[1][1], 
+		type, abbr, key.split(keysep)[2],
 		center[0], center[1],
 		centroid[0], centroid[1],
 		','.join(place['shapes'])
 	)
 
 def generateUS( detail, path='' ):
-	shapefile, places = readShapefile( 'state', 'shapes/state/st99_d00_shp-%s/st99_d00.shp' % detail )
+	shapefile, places = readShapefile( 'state', 'shapefiles/state/st99_d00_shp-%s/st99_d00.shp' % detail )
 	for key in places:
 		type, number, name = key.split(keysep)
 		state = states.byName[name]
@@ -239,7 +239,7 @@ def generateUS( detail, path='' ):
 	writeUS( places, path )
 
 def generateCongressional( detail, path='' ):
-	shapefile, places = readShapefile( 'district', 'shapes/congressional/cd99_110_shp-%s/cd99_110.shp' % detail )
+	shapefile, places = readShapefile( 'district', 'shapefiles/congressional/cd99_110_shp-%s/cd99_110.shp' % detail )
 	for key, place in places.iteritems():
 		type, state, name = keysplit(key)
 		if type not in state: state[type] = []
@@ -253,7 +253,7 @@ def generateCounties( detail, path ):
 	writeCounties( getPlaces(detail), path )
 
 def getPlaces( detail ):
-	shapefile, places = readShapefile( 'county', 'shapes/county/co99_d00_shp-%s/co99_d00.shp' % detail )
+	shapefile, places = readShapefile( 'county', 'shapefiles/county/co99_d00_shp-%s/co99_d00.shp' % detail )
 	for key, place in places.iteritems():
 		type, state, name = keysplit(key)
 		abbr = state['abbr']
@@ -264,7 +264,7 @@ def getPlaces( detail ):
 		state = states.byAbbr[abbr]
 		if type not in state: state[type] = []
 		othershapefile, otherplaces = readShapefile( type,
-			'shapes/%(base)s/%(file)s_shp-%(detail)s/%(file)s.shp' %{
+			'shapefiles/%(base)s/%(file)s_shp-%(detail)s/%(file)s.shp' %{
 				'base': type,
 				'file': file,
 				'detail': detail

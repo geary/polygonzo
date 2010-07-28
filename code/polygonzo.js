@@ -15,7 +15,7 @@ PolyGonzo = {
 			PolyGonzo.onetime = true;
 		}
 		
-		var box = a.container, places = a.places, canvas, ctx, tracker, zoom, offset;
+		var box = a.container, geo = a.geo, features = geo.features, canvas, ctx, tracker, zoom, offset;
 		
 		if( PolyGonzo.msie ) {
 			canvas = document.createElement( 'div' );
@@ -62,7 +62,7 @@ PolyGonzo = {
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
 				
-				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geo, features, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					var c = ctx;
 					c.beginPath();
 					
@@ -88,7 +88,7 @@ PolyGonzo = {
 				tracker.nextSibling && canvas.removeChild( tracker.nextSibling );
 				
 				var vml = [], iVml = 0;
-				eachShape( places, zoom, offset, function( offsetX, offsetY, place, shape, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geo, features, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					
 					vml[iVml++] = '<pgz_vml_:shape style="position:absolute;width:10px;height:10px;" coordorigin="';
 					vml[iVml++] = -~~( offsetX * 10 - .5 );
@@ -136,15 +136,18 @@ PolyGonzo = {
 			a.container.removeChild( canvas );
 		};
 		
+/*	Untested and out of date
 		this.latLngToPixel = function( lat, lng, zoom, offset ) {
+			debugger;
 			var point = [lng,lat];
 			offset = offset || { x:0, y:0 };
-			var shape = { points: [ [lng,lat] ] };
-			var place = { shapes: [ shape ] };
-			eachShape( [ place ], zoom, offset || { x:0, y:0 }, function() {} );
-			var coord = shape.coords[zoom][0];
+			var poly = { points: [ [lng,lat] ] };
+			var feature = { polys: [ poly ] };
+			eachPoly( [ feature ], zoom, offset, function() {} );
+			var coord = poly.coords[zoom][0];
 			return { x: ~~coord[0], y: ~~coord[1] };
 		};
+*/
 		
 		function onetime() {
 			PolyGonzo.msie = !! document.namespaces;
@@ -154,7 +157,7 @@ PolyGonzo = {
 			}
 		}
 		
-		function eachShape( places, zoom, offset, callback ) {
+		function eachPoly( geo, features, zoom, offset, callback ) {
 			var pi = Math.PI, log = Math.log, sin = Math.sin,
 				big = 1 << 28,
 				big180 = big / 180,
@@ -162,39 +165,39 @@ PolyGonzo = {
 				radius = big / pi,
 				oldZoom = Infinity;
 			
-			var totalShapes = 0, totalPoints = 0;
-			var nPlaces = places.length;
+			var totalPolys = 0, totalPoints = 0;
+			var nPlaces = features.length;
 			
-			for( var iPlace = -1, place;  place = places[++iPlace]; ) {
-				var shapes = place.shapes, nShapes = shapes.length;
-				totalShapes += nShapes;
+			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
+				var polys = feature.geometry.coordinates, nPolys = polys.length;
+				totalPolys += nPolys;
 				
-				var placeZoom = place.zoom != null ? place.zoom : zoom;
-				if( placeZoom != oldZoom ) {
-					oldZoom = placeZoom;
+				var featureZoom = feature.zoom != null ? feature.zoom : zoom;
+				if( featureZoom != oldZoom ) {
+					oldZoom = featureZoom;
 					var
-						divisor = Math.pow( 2, 21 - placeZoom ),
+						divisor = Math.pow( 2, 21 - featureZoom ),
 						multX = big180 / divisor,
 						multY = -radius / divisor / 2;
 				}
 				
-				var placeOffset = place.offset || offset,
-					offsetX = placeOffset.x,
-					offsetY  = placeOffset.y;
+				var featureOffset = feature.offset || offset,
+					offsetX = featureOffset.x,
+					offsetY  = featureOffset.y;
 				
 				var
-					fillColor = place.fillColor,
-					fillOpacity = place.fillOpacity,
-					strokeColor = place.strokeColor,
-					strokeOpacity = place.strokeOpacity,
-					strokeWidth = place.strokeWidth;
+					fillColor = feature.fillColor,
+					fillOpacity = feature.fillOpacity,
+					strokeColor = feature.strokeColor,
+					strokeOpacity = feature.strokeOpacity,
+					strokeWidth = feature.strokeWidth;
 				
-				for( var iShape = -1, shape;  shape = shapes[++iShape]; ) {
-					var points = shape.points, nPoints = points.length;
+				for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
+					var points = poly[0], nPoints = points.length;
 					totalPoints += nPoints;
-					var coords = ( shape.coords = shape.coords || [] )[zoom];
+					var coords = ( poly.coords = poly.coords || [] )[zoom];
 					if( ! coords ) {
-						coords = shape.coords[zoom] = new Array( nPoints );
+						coords = poly.coords[zoom] = new Array( nPoints );
 						for( var iPoint = -1, point;  point = points[++iPoint]; ) {
 							var s = sin( point[1] * pi180 );
 							coords[iPoint] = [
@@ -203,12 +206,12 @@ PolyGonzo = {
 							];
 						}
 					}
-					callback( offsetX, offsetY, place, shape, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+					callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 				}
 			}
 			
-			places.polygonzo = {
-				counts: { places: nPlaces, shapes: totalShapes, points: totalPoints }
+			geo.polygonzo = {
+				counts: { features: nPlaces, polys: totalPolys, points: totalPoints }
 			};
 		}
 		
@@ -217,29 +220,28 @@ PolyGonzo = {
 				e = e || window.event;
 				canvasOffset = canvasOffset || $canvas.offset();
 				var x = e.clientX - canvasOffset.left, y = e.clientY - canvasOffset.top;
-				if( ! hitWhere  ||  ! contains( hitWhere.shape, x - hitOffset.x, y - hitOffset.y, hitZoom ) )
+				if( ! hitWhere  ||  ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom ) )
 					hitWhere = hittest( x, y );
 				a.events[name]( e, hitWhere );
 			};
 		}
 		
 		function hittest( x, y ) {
-			var places = a.places;
-			for( var iPlace = -1, place;  place = places[++iPlace]; ) {
-				hitZoom = place.zoom != null ? place.zoom : zoom;
-				hitOffset = place.offset || offset;
-				var placeX = x - hitOffset.x, placeY = y - hitOffset.y
-				var shapes = place.shapes;
-				for( var iShape = -1, shape;  shape = shapes[++iShape]; )
-					if( contains( shape, placeX, placeY, hitZoom ) ) {
-						return { /*parent:entity,*/ place:place, shape:shape };
+			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
+				hitZoom = feature.zoom != null ? feature.zoom : zoom;
+				hitOffset = feature.offset || offset;
+				var featureX = x - hitOffset.x, featureY = y - hitOffset.y
+				var polys = feature.geometry.coordinates;
+				for( var iPoly = -1, poly;  poly = polys[++iPoly]; )
+					if( contains( poly, featureX, featureY, hitZoom ) ) {
+						return { /*parent:entity,*/ feature:feature, poly:poly };
 					}
 			}
 			return null;
 		}
 		
-		function contains( shape, x, y, zoom ) {
-			var coords = shape.coords[zoom];
+		function contains( poly, x, y, zoom ) {
+			var coords = poly.coords[zoom];
 			if( ! coords ) return false;
 			var inside = false;
 			var n = coords.length;
@@ -275,7 +277,7 @@ PolyGonzo = {
 			frame = new PolyGonzo.Frame({
 				container: pane,
 				//group: a.group,
-				places: a.places,
+				geo: a.geo,
 				events: a.events
 			});
 			canvas = frame.canvas;

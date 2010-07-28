@@ -70,8 +70,8 @@ function load() {
 				colorize( region );
 			},
 			drew: function() {
-				var counts = region.places.polygonzo.counts;
-				log( counts.places, 'places,', counts.shapes, 'shapes,', counts.points, 'points' );
+				var counts = region.geo.polygonzo.counts;
+				log( counts.features, 'features,', counts.polys, 'polys,', counts.points, 'points' );
 				if( $('#chkAnimate').attr('checked') ) {
 					clearTimeout( polyTimer );
 					polyTimer = setTimeout( function() {
@@ -85,11 +85,11 @@ function load() {
 					}, 25 );
 				}
 			},
-			over: function( place ) {
-				$('#status').html( placename(place) );
+			over: function( feature ) {
+				$('#status').html( featureName(feature) );
 			},
-			click: function( place ) {
-				alert( 'Clicked ' + placename(place) );
+			click: function( feature ) {
+				alert( 'Clicked ' + featureName(feature) );
 			}
 		}
 	});
@@ -117,23 +117,26 @@ function load() {
 	
 	function colorize( region ) {
 		// Test with random colors
-		( region.places || [region] ).forEach( function( place ) {
-			//place.fillColor = '#FFFFFF';
-			//place.fillOpacity = 0;
-			place.fillColor = '#' + Math.random().toString(16).slice(2,8);
-			place.fillOpacity = Math.random() * .5 + .1;
-			place.strokeColor = '#000000';
-			place.strokeOpacity = 0.2;
-			place.strokeWidth = 1.5;
+		( region.geo.features || [region] ).forEach( function( feature ) {
+			//feature.fillColor = '#FFFFFF';
+			//feature.fillOpacity = 0;
+			feature.fillColor = '#' + Math.random().toString(16).slice(2,8);
+			feature.fillOpacity = Math.random() * .5 + .1;
+			feature.strokeColor = '#000000';
+			feature.strokeOpacity = 0.2;
+			feature.strokeWidth = 1.5;
 		});
 	}
 	
-	function placename( place ) {
-		if( ! place ) return 'nowhere';
-		var state = PolyMap.stateByAbbr(place.state).name;
-		switch( place.type ) {
-			case 'cd': return state + ( place.name == 'One' ? ' (one district)' : ' District ' + place.name );
-			case 'county': return place.name + ' County, ' + state;
+	function featureName( feature ) {
+		if( ! feature ) return 'nowhere';
+		var props = feature.properties;
+		var abbr = props.kind == 'state' ? props.abbr : feature.container.properties.abbr;
+		var state = PolyMap.stateByAbbr(abbr).name;
+		var local = feature.properties.name;
+		switch( props.kind ) {
+			case 'cd': return state + ( local == 'One' ? ' (one district)' : ' District ' + local );
+			case 'county': return local + ' County, ' + state;
 		}
 		return state;
 	}
