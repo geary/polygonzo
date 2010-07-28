@@ -338,6 +338,7 @@ function stateReady( state ) {
 		// Let map display before drawing polys
 		setTimeout( function() {
 			trigger( 'load', state );
+			var overFeature;
 			var geo = county ? [ county ] : state.geo;
 			gonzo = new PolyGonzo.GOverlay({
 				//group: state,
@@ -345,8 +346,11 @@ function stateReady( state ) {
 				events: {
 					mousemove: function( event, where ) {
 						var feature = where && where.feature;
-						if( feature ) feature.container = geo;
-						trigger( 'over', feature );
+						if( feature != overFeature ) {
+							if( feature ) feature.container = geo;
+							trigger( 'over', feature );
+							overFeature = feature;
+						}
 					},
 					click: function( event, where ) {
 						var feature = where && where.feature;
