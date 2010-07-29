@@ -293,23 +293,6 @@ opt.state = opt.state || 'us';
 
 var state = states[opt.state];
 
-function contains( shape, x, y ) {
-	var inside = false;
-	var points = shape.points, n = points.length;
-	var v = points[n-1], x1 = v[0], y1 = v[1];
-
-	for( var i = 0;  i < n;  ++i ) {
-		var v = points[i], x2 = v[0], y2 = v[1];
-		
-		if( ( y1 < y  &&  y2 >= y ) || ( y2 < y  &&  y1 >= y ) )
-			if ( x1 + ( y - y1 ) / ( y2 - y1 ) * ( x2 - x1 ) < x )
-				inside = ! inside;
-		
-		x1 = x2, y1 = y2;
-	}
-	return inside;
-}
-
 function zoomToBounds( bounds ) {
 	var latlngbounds = new GLatLngBounds(
 		new GLatLng( bounds[0][1], bounds[0][0] ),
