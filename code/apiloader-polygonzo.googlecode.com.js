@@ -17,7 +17,7 @@
 
 (function() {
 	
-	var key = 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxRJvxoAJQuaWxPltcT3CawrQ4FnGhRYbFhfP2Q0bGOOdNEWSQez90jIXw';
+	var key = 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxRjD_g9JWob_BY_bvArK_nQq_fZHhRbCusPq8UtDEYXGnyRj6wwa3Mbvw';
 	
 	document.write(
 		'<script type="text/javascript" src="http://www.google.com/jsapi?key=', key, '">',
