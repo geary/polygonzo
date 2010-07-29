@@ -11,23 +11,10 @@
 	</style>
 	
 	<script type="text/javascript">
-		(function() {
-			GoogleMapsApiKey = {
-				'polygonzo.googlecode.com': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxRjD_g9JWob_BY_bvArK_nQq_fZHhRbCusPq8UtDEYXGnyRj6wwa3Mbvw',
-				'gigapad': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTCDaeoAnk9GZSdGi854AcXbJXoXRS9QqxqDWHL54Twi5thIIANaCUAeA',
-				'gigapad.local': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTM3oEyKJfFfMe3pRkahPyHmmHL_xSjOVWnaIMs0gtUrFuoOJzsQiPnKA',
-				'mg.to': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRQjDwyFD3YNj60GgWGUlJCU_q5i9hSSSzj0ergKKMY55eRpMa05FE3Wog',
-				'padlet': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRSuIOvo2pGs7VouOPMgaUBd9TDiaBTE5gjPTrifBPED7VUFoeKD_Ysmkw',
-				'padlet.local': 'ABQIAAAAgNQJhbWKFHRJJiHCXotPZxTbToHSggDWprRoD6gaXq5geEyxiBTRRmW6BwPHdCzJ2mh90uajjkpAOA',
-				's.mg.to': 'ABQIAAAAL7MXzZBubnPtVtBszDCxeRQ9jbX8zKuYy1oz9F5p7GBNeAnoJRS9Itc8RizuhplTF59tia4NLgrdHQ',
-				'': ''
-			}[location.host];
-			
-			document.write(
-				'<script type="text/javascript" src="http://www.google.com/jsapi?key=', GoogleMapsApiKey, '">',
-				'<\/script>'
-			);
-		})();	
+		document.write(
+			'<script type="text/javascript" src="apiloader-', location.host.replace(':','-'), '.js">',
+			'<\/script>'
+		);
 	</script>
 	
 	<script type="text/javascript">
