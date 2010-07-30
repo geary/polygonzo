@@ -93,7 +93,8 @@ function load() {
 				}
 				if( feature ) {
 					var centroid = feature.properties.centroid;
-					marker = new GMarker( new GLatLng( centroid[1], centroid[0] ) );
+					var latlng = new google.maps.LatLng( centroid[1], centroid[0] );
+					marker = new google.maps.Marker( pm.v2 ? latlng : { position: latlng } );
 					pm.addMarker( marker );
 				}
 			},

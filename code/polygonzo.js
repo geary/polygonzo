@@ -260,20 +260,50 @@ PolyGonzo = {
 		}
 	},
 	
-	// PolyGonzo.GOverlay() - Google Maps JavaScript API overlay
-	GOverlay: function( a ) {
-		var map, pane, frame, canvas, moveListener;
+	// PolyGonzo.PgOverlay() - Google Maps JavaScript API V2/V3 overlay
+	PgOverlay: function( a ) {
+		var map = a.map, pane, frame, canvas, moveListener;
 		
-		var pg = new GOverlay;
-		
-		function redraw() {
-			pg.redraw( null, true );
+		var gm = google.maps;
+		var v2 = ! gm.event;
+		if( v2 ) {
+			var gme = gm.Event, pg = new gm.Overlay;
+			
+			pg.initialize = function( map_ ) {
+				map = map_;
+				moveListener = gme.addListener( map, 'moveend', function() {
+					pg.redraw( null, true );
+				});
+				init( map.getPane( G_MAP_MAP_PANE ) );
+			};
+			
+			pg.remove = remove;
+			
+			pg.redraw = function( force1, force2 ) {
+				var size = map.getSize();
+				if( force1 || force2 ) draw( map, size.width, size.height );
+			};
 		}
+		else {  // v3
+			var gme = gm.event, pg = new gm.OverlayView;
+			
+			pg.onAdd = function() {
+				moveListener = gme.addListener( map, 'center_changed', function() {
+					if( ! map._PolyGonzo_fitting )
+						pg.draw();
+				});
+				init( pg.getPanes().overlayLayer );
+			};
+			
+			pg.onRemove = remove;
+			
+			pg.draw = function() {
+				var div = map.getDiv();
+				draw( pg.getProjection(), div.clientWidth, div.clientHeight );
+			};
+		};
 		
-		pg.initialize = function( map_ ) {
-			map = map_;
-			moveListener = GEvent.addListener( map, 'moveend', function() { pg.redraw( null, true ); } );
-			pane = map.getPane( G_MAP_MAP_PANE );
+		function init( pane ) {
 			frame = new PolyGonzo.Frame({
 				container: pane,
 				//group: a.group,
@@ -281,20 +311,16 @@ PolyGonzo = {
 				events: a.events
 			});
 			canvas = frame.canvas;
-		};
+		}
 		
-		pg.remove = function() {
-			GEvent.removeListener( moveListener );
+		function remove() {
+			gme.removeListener( moveListener );
 			frame.remove();
-		};
+		}
 		
-		pg.redraw = function( force1, force2 ) {
-			if( !( force1 || force2 ) ) return;
-			
-			var mapSize = map.getSize();
-			var zoom = map.getZoom();
-			var margin = { x: mapSize.width / 3, y: mapSize.height / 3 };
-			var canvasSize = { width: mapSize.width + margin.x * 2, height: mapSize.height + margin.y * 2 };
+		function draw( converter, width, height ) {
+			var margin = { x: width / 3, y: height / 3 };
+			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
 			var offset = {
 				x: canvas.offsetParent.offsetParent.offsetLeft,
@@ -310,16 +336,17 @@ PolyGonzo = {
 			canvas.style.left = ( - offset.x - margin.x ) + 'px';
 			canvas.style.top = ( - offset.y - margin.y ) + 'px';
 			
-			var zero = map.fromLatLngToDivPixel( new GLatLng(0,0) );
+			var zero = converter.fromLatLngToDivPixel(
+				new gm.LatLng( 0, 0 )
+			);
 			offset.x += margin.x + zero.x;
 			offset.y += margin.y + zero.y;
-			var zoom = map.getZoom();
 			
 			frame.draw({
 				offset: offset,
-				zoom: zoom
+				zoom: map.getZoom()
 			});
-		};
+		}
 		
 		return pg;
 	}

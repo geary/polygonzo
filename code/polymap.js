@@ -19,8 +19,148 @@ PolyMap = function( a ) {
 	pm = this;
 	pm.a = a;
 	
+	pm.v2 = !! window.GBrowserIsCompatible;
+	var gm = google.maps;
+	
 	initMap();
 	
+	function initMap() {
+		if( map ) return;
+		
+		if( pm.v2 ) {
+			if( ! GBrowserIsCompatible() ) return;
+			map = new GMap2( pm.a.container );
+			//zoomRegion();
+			map.enableContinuousZoom();
+			map.enableDoubleClickZoom();
+			//map.enableGoogleBar();
+			map.enableScrollWheelZoom();
+			//map.addControl( new GLargeMapControl() );
+			map.addControl( new GSmallMapControl() );
+		}
+		else {
+			map = new gm.Map( pm.a.container, {
+				mapTypeId: gm.MapTypeId.ROADMAP
+			});
+	
+		}
+		
+		//zoomToBounds( stateUS.bounds );
+	}
+
+	function zoomToBounds( bounds ) {
+		var latlngbounds = new gm.LatLngBounds(
+			new gm.LatLng( bounds[0][1], bounds[0][0] ),
+			new gm.LatLng( bounds[1][1], bounds[1][0] )
+		);
+		if( pm.v2 ) {
+			var zoom = map.getBoundsZoomLevel( latlngbounds );
+			map.setCenter( latlngbounds.getCenter(), zoom );
+		}
+		else {
+			map._PolyGonzo_fitting = true;
+			map.fitBounds( latlngbounds );
+			map._PolyGonzo_fitting = false;
+		}
+		//log.reset();
+		//log( 'zoomToBounds return' );
+	}
+	
+	function stateReady( state ) {
+		delete pm.overWhere;
+		var county = opt.county && state.geo.features.by_fips[opt.county];
+		//if( ! mapplet ) map.checkResize();
+		//map.clearOverlays();
+		//$('script[title=jsonresult]').remove();
+		//if( json.status == 'later' ) return;
+		var bounds = county ? county.bounds : state.bounds;
+		if( bounds ) {
+			//var latpad = ( bounds[1][1] - bounds[0][1] ) / 20;
+			//var lngpad = ( bounds[1][0] - bounds[0][0] ) / 20;
+			//var latlngbounds = new GLatLngBounds(
+			//	new GLatLng( bounds[0][1] - latpad, bounds[0][0] - lngpad ),
+			//	new GLatLng( bounds[1][1] + latpad, bounds[1][0] + lngpad )
+			//);
+			zoomToBounds( bounds );
+			polys( state, opt.county );
+		}
+		else {
+		}
+		
+		function polys( state ) {
+			// Let map display before drawing polys
+			setTimeout( function() {
+				trigger( 'load', state );
+				var overFeature;
+				var geo = county ? [ county ] : state.geo;
+				
+				gonzo = new PolyGonzo.PgOverlay({
+					map: map,
+					//group: state,
+					geo: geo,
+					events: {
+						mousemove: function( event, where ) {
+							var feature = where && where.feature;
+							if( feature != overFeature ) {
+								if( feature ) feature.container = geo;
+								trigger( 'over', feature );
+								overFeature = feature;
+							}
+						},
+						click: function( event, where ) {
+							var feature = where && where.feature;
+							if( feature ) feature.container = geo;
+							trigger( 'click', feature );
+						}
+					}
+				});
+				
+				if( pm.v2 ) map.addOverlay( gonzo );
+				else gonzo.setMap( map );
+				
+				trigger( 'redraw', state );
+				drawPolys();
+			}, 20 );
+		}
+	}
+	
+	function loadState() {
+		if( map && gonzo ) {
+			if( pm.v2 ) map.removeOverlay( gonzo );
+			else gonzo.setMap( null );
+		}
+		gonzo = null;
+		var abbr = opt.state;
+		var state = curState = stateByAbbr( abbr );
+		if( state.places ) {
+			stateReady( state );
+		}
+		else {
+			$.getJSON( ( pm.a.shapes || 'shapes/' ) + abbr.toLowerCase() + '.json', function( json ) {
+				state.geo = json;
+				if( state != stateUS ) json.features.indexBy('fips');
+				log.reset();
+				//log( 'got JSON ', abbr );
+				if( state == stateUS ) loadBounds( json );
+				stateReady( state );
+			});
+		}
+	}
+	
+	function drawPolys() {
+		if( ! gonzo ) return;
+		
+		trigger( 'draw' );
+		
+		log.reset();
+		log( 'start gonzo.redraw' );
+		if( pm.v2 ) gonzo.redraw( null, true );
+		else gonzo.draw();
+		log( 'end gonzo.redraw' );
+		
+		trigger( 'drew' );
+	}
+
 	return $.extend( this, {
 		
 		// PolyMap methods
@@ -36,14 +176,16 @@ PolyMap = function( a ) {
 		},
 		
 		addMarker: function( marker ) {
-			map.addOverlay( marker );
+			if( pm.v2 ) map.addOverlay( marker );
+			else marker.setMap( map );
 		},
 		
 		removeMarker: function( marker ) {
-			map.removeOverlay( marker );
+			if( pm.v2 ) map.removeOverlay( marker );
+			else marker.setMap( null );
 		}
 	});
-};
+};  // end PolyMap constructor
 
 if( ! Array.prototype.forEach ) {
 	Array.prototype.forEach = function( fun /*, thisp*/ ) {
@@ -293,70 +435,6 @@ opt.state = opt.state || 'us';
 
 var state = states[opt.state];
 
-function zoomToBounds( bounds ) {
-	var latlngbounds = new GLatLngBounds(
-		new GLatLng( bounds[0][1], bounds[0][0] ),
-		new GLatLng( bounds[1][1], bounds[1][0] )
-	);
-	var zoom = map.getBoundsZoomLevel( latlngbounds );
-	map.setCenter( latlngbounds.getCenter(), zoom );
-	//log.reset();
-	//log( 'zoomToBounds return' );
-}
-
-function stateReady( state ) {
-	delete pm.overWhere;
-	var county = opt.county && state.geo.features.by_fips[opt.county];
-	//if( ! mapplet ) map.checkResize();
-	//map.clearOverlays();
-	//$('script[title=jsonresult]').remove();
-	//if( json.status == 'later' ) return;
-	var bounds = county ? county.bounds : state.bounds;
-	if( bounds ) {
-		//var latpad = ( bounds[1][1] - bounds[0][1] ) / 20;
-		//var lngpad = ( bounds[1][0] - bounds[0][0] ) / 20;
-		//var latlngbounds = new GLatLngBounds(
-		//	new GLatLng( bounds[0][1] - latpad, bounds[0][0] - lngpad ),
-		//	new GLatLng( bounds[1][1] + latpad, bounds[1][0] + lngpad )
-		//);
-		zoomToBounds( bounds );
-		polys( state, opt.county );
-	}
-	else {
-	}
-	
-	function polys( state ) {
-		// Let map display before drawing polys
-		setTimeout( function() {
-			trigger( 'load', state );
-			var overFeature;
-			var geo = county ? [ county ] : state.geo;
-			gonzo = new PolyGonzo.GOverlay({
-				//group: state,
-				geo: geo,
-				events: {
-					mousemove: function( event, where ) {
-						var feature = where && where.feature;
-						if( feature != overFeature ) {
-							if( feature ) feature.container = geo;
-							trigger( 'over', feature );
-							overFeature = feature;
-						}
-					},
-					click: function( event, where ) {
-						var feature = where && where.feature;
-						if( feature ) feature.container = geo;
-						trigger( 'click', feature );
-					}
-				}
-			});
-			map.addOverlay( gonzo );
-			trigger( 'redraw', state );
-			drawPolys();
-		}, 20 );
-	}
-}
-
 function setStateByAbbr( abbr ) {
 	setState( stateByAbbr(abbr) );
 }
@@ -370,61 +448,12 @@ function setState( state ) {
 	loadState();
 }
 
-function initMap() {
-	if( map ) return;
-	
-	if( ! GBrowserIsCompatible() ) return;
-	map = new GMap2( pm.a.container );
-	//zoomRegion();
-	map.enableContinuousZoom();
-	map.enableDoubleClickZoom();
-	//map.enableGoogleBar();
-	map.enableScrollWheelZoom();
-	//map.addControl( new GLargeMapControl() );
-	map.addControl( new GSmallMapControl() );
-	
-	//zoomToBounds( stateUS.bounds );
-}
-
-function drawPolys() {
-	if( ! gonzo ) return;
-	
-	trigger( 'draw' );
-	
-	log.reset();
-	log( 'start gonzo.redraw' );
-	gonzo.redraw( null, true );
-	log( 'end gonzo.redraw' );
-	
-	trigger( 'drew' );
-}
-
 function oneshot() {
 	var timer;
 	return function( fun, time ) {
 		clearTimeout( timer );
 		timer = setTimeout( fun, time );
 	};
-}
-
-function loadState() {
-	map && map.clearOverlays();
-	gonzo = null;
-	var abbr = opt.state;
-	var state = curState = stateByAbbr( abbr );
-	if( state.places ) {
-		stateReady( state );
-	}
-	else {
-		$.getJSON( ( pm.a.shapes || 'shapes/' ) + abbr.toLowerCase() + '.json', function( json ) {
-			state.geo = json;
-			if( state != stateUS ) json.features.indexBy('fips');
-			log.reset();
-			//log( 'got JSON ', abbr );
-			if( state == stateUS ) loadBounds( json );
-			stateReady( state );
-		});
-	}
 }
 
 function loadBounds( json ) {
@@ -437,8 +466,6 @@ function trigger( event ) {
 	var fn = pm.a.events && pm.a.events[event];
 	fn && fn.apply( pm, Array.prototype.slice.call( arguments, 1 ) );
 }
-
-$(window).bind( 'unload', GUnload );
 
 })( jQuery );
 // end outer wrapper function
