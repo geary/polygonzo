@@ -59,7 +59,7 @@ function optionHTML( value, name, selected, disabled ) {
 })();
 
 function load() {
-	var state, region, frameStart, marker;
+	var state, region, marker;
 	
 	var pm = new PolyMap({
 		container: $('#testmap')[0],
@@ -70,18 +70,12 @@ function load() {
 				colorize( region );
 			},
 			drew: function() {
-				var counts = region.geo.polygonzo.counts;
-				log( counts.features, 'features,', counts.polys, 'polys,', counts.points, 'points' );
 				if( $('#chkAnimate').attr('checked') ) {
 					clearTimeout( polyTimer );
 					polyTimer = setTimeout( function() {
-						log.reset();
+						log.reset( true );
 						colorize( region );
 						pm.redraw();
-						var time = +new Date;
-						if( frameStart )
-							log( 'Frame time ' + ( ( time - frameStart ) / 1000 ).toFixed(3) + ' seconds' );
-						frameStart = time;
 					}, 25 );
 				}
 			},

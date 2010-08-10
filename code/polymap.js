@@ -98,6 +98,7 @@ PolyMap = function( a ) {
 					map: map,
 					//group: state,
 					geo: geo,
+					log: log,
 					events: {
 						mousemove: function( event, where ) {
 							var feature = where && where.feature;
@@ -115,11 +116,12 @@ PolyMap = function( a ) {
 					}
 				});
 				
+				trigger( 'draw' );
 				if( pm.v2 ) map.addOverlay( gonzo );
 				else gonzo.setMap( map );
-				
-				trigger( 'redraw', state );
-				drawPolys();
+				setTimeout( function() {
+					trigger( 'drew' );
+				}, 250 );
 			}, 20 );
 		}
 	}
@@ -153,10 +155,8 @@ PolyMap = function( a ) {
 		trigger( 'draw' );
 		
 		log.reset();
-		log( 'start gonzo.redraw' );
 		if( pm.v2 ) gonzo.redraw( null, true );
 		else gonzo.draw();
-		log( 'end gonzo.redraw' );
 		
 		trigger( 'drew' );
 	}

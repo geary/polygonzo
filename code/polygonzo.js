@@ -318,6 +318,11 @@ PolyGonzo = {
 		}
 		
 		function draw( converter, width, height ) {
+			if( a.log ) {
+				a.log.reset( true );
+				a.log( 'Drawing...' );
+			}
+			
 			var margin = { x: width / 3, y: height / 3 };
 			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
@@ -345,6 +350,15 @@ PolyGonzo = {
 				offset: offset,
 				zoom: map.getZoom()
 			});
+			
+			if( a.log ) {
+				var counts = a.geo.polygonzo.counts;
+				a.log(
+					counts.features, 'features,',
+					counts.polys, 'polys,',
+					counts.points, 'points'
+				);
+			}
 		}
 		
 		return pg;

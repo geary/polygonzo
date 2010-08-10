@@ -21,9 +21,9 @@ function log() {
 	log.time = +new Date;
 }
 
-log.reset = function() {
-	$('#log').empty();
+log.reset = function( empty ) {
+	if( empty ) $('#log').empty();
 	log.time = +new Date;
 };
 
-log.reset();
+log.reset( true );
