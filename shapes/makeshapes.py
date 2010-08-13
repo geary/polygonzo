@@ -227,7 +227,7 @@ def writeJSON( path, type, abbr, suffix, json ):
 	"type": "FeatureCollection",
 	"properties": {
 		"kind": "%s",
-		"abbr": "%s"
+		"state": "%s"
 	},
 	"features": [%s
 	]
@@ -240,12 +240,10 @@ def getPlaceJSON( places, key, state, type ):
 	bounds = place['bounds']
 	center = place['center']
 	centroid = place['centroid']
-	if type == "state": abbr = '"abbr":"%s",' % state
-	else: abbr = ''
-	return '{"type":"Feature","bbox":[%.4f,%.4f,%.4f,%.4f],"properties":{"kind":"%s",%s"name":"%s","center":[%.4f,%.4f],"centroid":[%.4f,%.4f]},"geometry":{"type":"MultiPolygon","coordinates":[%s]}}' %(
+	return '{"type":"Feature","bbox":[%.4f,%.4f,%.4f,%.4f],"properties":{"kind":"%s","name":"%s","state":"%s","center":[%.4f,%.4f],"centroid":[%.4f,%.4f]},"geometry":{"type":"MultiPolygon","coordinates":[%s]}}' %(
 		bounds[0][0], bounds[0][1], 
 		bounds[1][0], bounds[1][1], 
-		type, abbr, key.split(keysep)[2],
+		type, key.split(keysep)[2], state,
 		center[0], center[1],
 		centroid[0], centroid[1],
 		','.join(place['shapes'])

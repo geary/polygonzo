@@ -463,7 +463,7 @@ function oneshot() {
 
 function loadBounds( json ) {
 	json.features.forEach( function( feature ) {
-		stateByAbbr(feature.properties.abbr).bbox = feature.bbox;
+		stateByAbbr(feature.properties.state).bbox = feature.bbox;
 	});
 }
 

@@ -135,7 +135,7 @@ function load() {
 	function featureName( feature ) {
 		if( ! feature ) return 'nowhere';
 		var props = feature.properties;
-		var abbr = props.kind == 'state' ? props.abbr : feature.container.properties.abbr;
+		var abbr = props.state || feature.container.properties.state;
 		var state = PolyMap.stateByAbbr(abbr).name;
 		var local = feature.properties.name;
 		switch( props.kind ) {
