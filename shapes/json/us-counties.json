@@ -2,7 +2,7 @@
 	"type": "FeatureCollection",
 	"properties": {
 		"kind": "country",
-		"abbr": "county"
+		"abbr": "us"
 	},
 	"features": [
 		{"type":"Feature","bbox":[-86.9157,32.3394,-86.4118,32.7063],"properties":{"kind":"county","name":"Autauga","center":[-86.6637,32.5231],"centroid":[-86.6397,32.5341]},"geometry":{"type":"MultiPolygon","coordinates":[[[[-86.4118,32.7063],[-86.4118,32.4106],[-86.4994,32.3449],[-86.6254,32.4051],[-86.8171,32.3394],[-86.9157,32.6625]]]]}},

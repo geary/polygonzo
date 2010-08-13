@@ -132,13 +132,18 @@ PolyMap = function( a ) {
 			else gonzo.setMap( null );
 		}
 		gonzo = null;
-		var abbr = opt.state;
+		var abbr = opt.state.toLowerCase();
 		var state = curState = stateByAbbr( abbr );
 		if( state.places ) {
 			stateReady( state );
 		}
 		else {
-			$.getJSON( ( pm.a.shapes || 'shapes/' ) + abbr.toLowerCase() + '.json', function( json ) {
+			var file =
+				abbr == 'us' ? 'us-states' :
+				abbr == 'congressional' ? 'us-house' :
+				abbr == 'county' ? 'us-counties' :
+				abbr + '-counties';
+			$.getJSON( ( pm.a.shapes || 'shapes/' ) + file + '.json', function( json ) {
 				state.geo = json;
 				if( state != stateUS ) json.features.indexBy('fips');
 				log.reset();

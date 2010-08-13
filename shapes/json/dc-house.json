@@ -1,0 +1,11 @@
+{
+	"type": "FeatureCollection",
+	"properties": {
+		"kind": "state",
+		"abbr": "dc"
+	},
+	"features": [
+		{"type":"Feature","bbox":[-77.1174,38.7912,-76.9422,38.9939],"properties":{"kind":"district","name":"98","center":[-77.0298,38.8926],"centroid":[-77.0326,38.9014]},"geometry":{"type":"MultiPolygon","coordinates":[[[[-77.0407,38.7912],[-77.1174,38.9336],[-77.0407,38.9939],[-76.9422,38.9172],[-77.0243,38.8022]]]]}}
+		
+	]
+}

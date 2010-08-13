@@ -149,25 +149,29 @@ def keysplit( key ):
 	type, statenum, name = key.split(keysep)
 	return type, states.byNumber[statenum], name
 
-def writeUS( places, path ):
+def writeUsaStates( places, path ):
 	json = []
 	keys = places.keys()
 	keys.sort()
 	for key in keys:
 		json.append( getPlaceJSON( places, key, states.byNumber[ places[key]['state'] ]['abbr'].lower(), 'state' ) )
-	writeJSON( path, 'country', 'us', { 'state': json } )
+	writeJSON( path, 'country', 'us', '-states', { 'state': json } )
 
-# TODO: almost the same code as writeUS
-def writeCongressional( places, path ):
+# TODO: almost the same code as writeUsaStates
+def writeUsaCongressional( places, path ):
 	json = []
 	keys = places.keys()
 	keys.sort()
 	for key in keys:
-		json.append( getPlaceJSON( places, key, states.byNumber[ places[key]['state'] ]['abbr'].lower(), 'cd' ) )
-	writeJSON( path, 'district', 'congressional', { 'district': json } )
+		type, statenum, name = key.split(keysep)
+		if type == 'district':
+			json.append( getPlaceJSON( places, key, states.byNumber[ places[key]['state'] ]['abbr'].lower(), 'cd' ) )
+	for state in states.array:
+		del state['json']['county']
+	writeJSON( path, 'district', 'us', '-house', { 'district': json } )
 
-# TODO: almost the same code as writeUS
-def writeCounties( places, path ):
+# TODO: almost the same code as writeUsaStates
+def writeUsaCounties( places, path ):
 	json = []
 	keys = places.keys()
 	keys.sort()
@@ -175,9 +179,9 @@ def writeCounties( places, path ):
 		type, statenum, name = key.split(keysep)
 		if type == 'county':
 			json.append( getPlaceJSON( places, key, states.byNumber[ places[key]['state'] ]['abbr'].lower(), 'county' ) )
-	writeJSON( path, 'country', 'county', { 'county': json } )
+	writeJSON( path, 'country', 'us', '-counties', { 'county': json } )
 
-def writeStates( places, path ):
+def writeStatesCounties( places, path ):
 	p = {}
 	for k in places:
 		if places[k] != None:
@@ -187,13 +191,33 @@ def writeStates( places, path ):
 	keys.sort()
 	for key in keys:
 		type, state, name = keysplit(key)
-		if type not in state['json']: state['json'][type] = []
-		state['json'][type].append( getPlaceJSON( places, key, state['abbr'].lower(), type ) )
+		if type == 'county':
+			if type not in state['json']: state['json'][type] = []
+			state['json'][type].append( getPlaceJSON( places, key, state['abbr'].lower(), type ) )
 	for state in states.array:
-		writeJSON( path, 'state', state['abbr'].lower(), state['json'] )
+		writeJSON( path, 'state', state['abbr'].lower(), '-counties', state['json'] )
 
-def writeJSON( path, type, abbr, json ):
-	file = 'json/%s.json' % abbr
+# TODO: almost the same code as writeStatesCounties
+def writeStatesCongressional( places, path ):
+	p = {}
+	for k in places:
+		if places[k] != None:
+			p[k] = places[k]
+	places = p
+	keys = places.keys()
+	keys.sort()
+	for key in keys:
+		type, state, name = keysplit(key)
+		if type == 'district':
+			if type not in state['json']: state['json'][type] = []
+			state['json'][type].append( getPlaceJSON( places, key, state['abbr'].lower(), type ) )
+		#json.append( getPlaceJSON( places, key, states.byNumber[ places[key]['state'] ]['abbr'].lower(), 'cd' ) )
+	for state in states.array:
+		#del state['json']['county']
+		writeJSON( path, 'state', state['abbr'].lower(), '-house', state['json'] )
+
+def writeJSON( path, type, abbr, suffix, json ):
+	file = 'json/%s%s.json' %( abbr, suffix )
 	print 'Writing %s' % file
 	types = []
 	for t in json:
@@ -227,7 +251,8 @@ def getPlaceJSON( places, key, state, type ):
 		','.join(place['shapes'])
 	)
 
-def generateUS( detail, path='' ):
+def generateUsaStates( detail, path='' ):
+	print 'generateUsaStates'
 	shapefile, places = readShapefile( 'state', 'shapefiles/state/st99_d00_shp-%s/st99_d00.shp' % detail )
 	for key in places:
 		type, number, name = key.split(keysep)
@@ -236,21 +261,33 @@ def generateUS( detail, path='' ):
 		state['county'] = []
 		state['number'] = number
 		states.byNumber[number] = state
-	writeUS( places, path )
+	writeUsaStates( places, path )
 
-def generateCongressional( detail, path='' ):
+def generateUsaCongressional( detail, path='' ):
+	print 'generateUsaCongressional'
 	shapefile, places = readShapefile( 'district', 'shapefiles/congressional/cd99_110_shp-%s/cd99_110.shp' % detail )
 	for key, place in places.iteritems():
 		type, state, name = keysplit(key)
 		if type not in state: state[type] = []
 		state[type].append( place )
-	writeCongressional( places, path )
+	writeUsaCongressional( places, path )
 	
-def generateStates( detail, path ):
-	writeStates( getPlaces(detail), path )
+def generateStatesCounties( detail, path ):
+	print 'generateStatesCounties'
+	writeStatesCounties( getPlaces(detail), path )
 	
-def generateCounties( detail, path ):
-	writeCounties( getPlaces(detail), path )
+def generateStatesCongressional( detail, path ):
+	print 'generateStatesCongressional'
+	shapefile, places = readShapefile( 'district', 'shapefiles/congressional/cd99_110_shp-%s/cd99_110.shp' % detail )
+	for key, place in places.iteritems():
+		type, state, name = keysplit(key)
+		if type not in state: state[type] = []
+		state[type].append( place )
+	writeStatesCongressional( places, path )
+	
+def generateUsaCounties( detail, path ):
+	print 'generateUsaCounties'
+	writeUsaCounties( getPlaces(detail), path )
 
 def getPlaces( detail ):
 	shapefile, places = readShapefile( 'county', 'shapefiles/county/co99_d00_shp-%s/co99_d00.shp' % detail )
@@ -276,9 +313,11 @@ def getPlaces( detail ):
 			places[key] = place
 	return places
 
-generateUS( 75, 'us' )
-generateCongressional( 50, 'congressional' )
-generateCounties( 90, 'county' )
-generateStates( 80, 'state' )
+generateUsaStates( 75, 'us' )
+generateUsaCounties( 90, 'county' )
+generateStatesCounties( 80, 'state' )
+
+generateUsaCongressional( 50, 'congressional' )
+generateStatesCongressional( 50, 'state' )
 
 print 'Done!'
