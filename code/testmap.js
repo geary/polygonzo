@@ -61,6 +61,21 @@ function optionHTML( value, name, selected, disabled ) {
 function load() {
 	var state, region, marker;
 	
+	resize = function() {
+		var left = $('#panel').width();
+		$('#testmap').css({
+			left: left + 1,
+			top: 0,
+			width: window.innerWidth - left - 2,
+			height: window.innerHeight
+		})
+		
+		pm && pm.checkResize();
+	};
+	
+	$(window).resize( resize );
+	resize();
+	
 	var pm = new PolyMap({
 		container: $('#testmap')[0],
 		shapes: '../shapes/json/',

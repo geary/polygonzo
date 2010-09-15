@@ -35,8 +35,7 @@ PolyMap = function( a ) {
 			map.enableDoubleClickZoom();
 			//map.enableGoogleBar();
 			map.enableScrollWheelZoom();
-			//map.addControl( new GLargeMapControl() );
-			map.addControl( new GSmallMapControl() );
+			map.addControl( new GLargeMapControl() );
 		}
 		else {
 			map = new gm.Map( pm.a.container, {
@@ -188,6 +187,11 @@ PolyMap = function( a ) {
 		removeMarker: function( marker ) {
 			if( pm.v2 ) map.removeOverlay( marker );
 			else marker.setMap( null );
+		},
+		
+		checkResize: function() {
+			if( pm.v2 ) map.checkResize();
+			else google.maps.event.trigger( map, 'resize' );
 		}
 	});
 };  // end PolyMap constructor
