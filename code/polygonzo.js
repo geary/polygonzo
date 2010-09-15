@@ -218,8 +218,23 @@ PolyGonzo = {
 			tracker[ 'on' + name ] = function( e ) {
 				e = e || window.event;
 				canvasOffset = canvasOffset || $canvas.offset();
-				var x = e.clientX - canvasOffset.left, y = e.clientY - canvasOffset.top;
-				if( ! hitWhere  ||  ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom ) )
+				var x = -canvasOffset.left, y = -canvasOffset.top;
+				if( e.pageX || e.pageY ) {
+					x += e.pageX;
+					y += e.pageY;
+				}
+				else {
+					x += e.clientX +
+						document.body.scrollLeft +
+						document.documentElement.scrollLeft;
+					y += e.clientY +
+						document.body.scrollTop +
+						document.documentElement.scrollTop;
+				}
+				if(
+				   ! hitWhere  ||
+				   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
+				)
 					hitWhere = hittest( x, y );
 				a.events[name]( e, hitWhere );
 			};
