@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module>
+
+<ModulePrefs
+    title="PolyGonzo Test"
+    description="PolyGonzo test gadget for PolyGonzo home page"
+    author="Michael Geary"
+    author_affiliation="Geary Labs"
+    title_url="http://code.google.com/p/polygonzo/"
+    width="800"
+    height="600">
+</ModulePrefs>
+
+
+<Content type="url" href="http://polygonzo.googlecode.com/svn/trunk/code/test.html" />
+
+</Module>
