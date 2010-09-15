@@ -1,7 +1,6 @@
 // apiloader-polygonzo.googlecode.com.js
 // Copyright 2010 Michael Geary - http://mg.to/
-// Free Beer and Free Speech License. Enjoy!
-// http://freebeerfreespeech.org/
+// Use under any OSI license - http://www.opensource.org/
 
 // To run the PolyGonzo code in a different domain, copy this file
 // to a new file with a name like this:

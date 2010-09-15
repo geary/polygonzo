@@ -1,8 +1,6 @@
 // testmap.js
-// Copyright (c) 2008 Michael Geary
-// http://mg.to/
-// Free Beer and Free Speech License (any OSI license)
-// http://freebeerfreespeech.org/
+// Copyright 2008-2010 Michael Geary - http://mg.to/
+// Use under any OSI license - http://www.opensource.org/
 
 // Outer wrapper function
 (function( $ ) {

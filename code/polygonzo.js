@@ -1,9 +1,8 @@
 // polygonzo.js
-// Copyright (c) 2008 Ernest Delgado and Michael Geary
+// Copyright 2008-2010 Ernest Delgado and Michael Geary
 // http://ernestdelgado.com/
 // http://mg.to/
-// Free Beer and Free Speech License (any OSI license)
-// http://freebeerfreespeech.org/
+// Use under any OSI license: http://www.opensource.org/
 
 PolyGonzo = {
 	

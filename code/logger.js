@@ -1,7 +1,6 @@
 // logger.js
 // Copyright 2010 Michael Geary - http://mg.to/
-// Free Beer and Free Speech License. Enjoy!
-// http://freebeerfreespeech.org/
+// Use under any OSI license - http://www.opensource.org/
 
 function log() {
 	var text = Array.prototype.join.call( arguments, ' ' );
