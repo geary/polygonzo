@@ -29,7 +29,7 @@ PolyMap = function( a ) {
 		
 		if( pm.v2 ) {
 			if( ! GBrowserIsCompatible() ) return;
-			map = new GMap2( pm.a.container );
+			map = pm.map = new GMap2( pm.a.container );
 			//zoomRegion();
 			map.enableContinuousZoom();
 			map.enableDoubleClickZoom();
@@ -38,10 +38,9 @@ PolyMap = function( a ) {
 			map.addControl( new GLargeMapControl() );
 		}
 		else {
-			map = new gm.Map( pm.a.container, {
+			map = pm.map = new gm.Map( pm.a.container, {
 				mapTypeId: gm.MapTypeId.ROADMAP
 			});
-	
 		}
 		
 		//zoomToBounds( stateUS.bounds );
