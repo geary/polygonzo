@@ -354,7 +354,7 @@ PolyGonzo = {
 			if( a.log ) {
 				var counts = a.geo.polygonzo.counts;
 				a.log(
-					counts.features, 'features,',
+					counts.features, 'places,',
 					counts.polys, 'polys,',
 					counts.points, 'points'
 				);
