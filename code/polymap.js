@@ -189,6 +189,7 @@ PolyMap = function( a ) {
 		resize: function() {
 			if( pm.v2 ) map.checkResize();
 			else google.maps.event.trigger( map, 'resize' );
+			drawPolys();
 		}
 	});
 };  // end PolyMap constructor
