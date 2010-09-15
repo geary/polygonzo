@@ -69,7 +69,7 @@ function load() {
 			height: $window.height()
 		})
 		
-		pm && pm.checkResize();
+		pm && pm.resize();
 	};
 	
 	$window.resize( resize );

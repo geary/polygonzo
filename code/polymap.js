@@ -186,7 +186,7 @@ PolyMap = function( a ) {
 			else marker.setMap( null );
 		},
 		
-		checkResize: function() {
+		resize: function() {
 			if( pm.v2 ) map.checkResize();
 			else google.maps.event.trigger( map, 'resize' );
 		}
