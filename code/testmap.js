@@ -112,11 +112,6 @@ function load() {
 		}
 	});
 	
-	$('#stateSelector')
-		.change( stateSelectorChange )
-		.keyup( stateSelectorChange )
-		[0].selectedIndex = 0;
-	
 	$('#chkAnimate').click( function() {
 		if( this.checked ) {
 			pm.redraw();
@@ -131,7 +126,12 @@ function load() {
 	//	pm.redraw();
 	//});
 	
-	loadState( 'us' );
+	var match = location.search.match( /\Wstate=(\w+)/ );
+	$('#stateSelector')
+		.val( match && match[1].toUpperCase() || 'US' )
+		.change( stateSelectorChange )
+		.keyup( stateSelectorChange )
+		.trigger( 'change' );
 	
 	function colorize( region ) {
 		// Test with random colors
