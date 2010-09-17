@@ -45,9 +45,9 @@ function optionHTML( value, name, selected, disabled ) {
 	stateSelector = function() {
 		return S(
 			'<select id="stateSelector">',
-				option( 'us', '50 States, DC, and Puerto Rico', true ),
-				option( 'congressional', 'All US Congressional Districts' ),
-				option( 'county', 'All 3199 Counties (slow in IE!)' ),
+				option( 'US', '50 States, DC, and Puerto Rico', true ),
+				option( 'CONGRESSIONAL', 'All US Congressional Districts' ),
+				option( 'COUNTY', 'All 3199 Counties (slow in IE!)' ),
 				states.map( function( state ) {
 					return stateOption( state, false );
 				}).join(''),
@@ -127,12 +127,12 @@ function load() {
 	//});
 	
 	var match = location.search.match( /\Wstate=(\w+)/ );
-	var abbr = match && match[1] || 'us';
+	var abbr = match && match[1] || 'US';
 	$('#stateSelector')
 		.val( abbr.toUpperCase() )
 		.change( stateSelectorChange )
-		.keyup( stateSelectorChange );
-	loadState( abbr );
+		.keyup( stateSelectorChange )
+		.trigger( 'change' );
 	
 	function colorize( region ) {
 		// Test with random colors

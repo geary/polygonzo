@@ -325,7 +325,7 @@ if( ! Array.prototype.indexBy ) {
 
 var pm, map, gonzo;  // temp hacks: only a single PolyMap at a time
 
-var opt = { state:'us' };
+var opt = { state:'US' };
 
 var states = PolyMap.states = [
 	{ "abbr":"AL", "name":"Alabama", "bounds":[[-88.4711,30.2198],[-84.8892,35.0012]] },
@@ -438,7 +438,7 @@ function cacheUrl( url, cache, always ) {
 	return url;
 }
 
-opt.state = opt.state || 'us';
+opt.state = opt.state || 'US';
 
 var state = states[opt.state];
 
