@@ -130,7 +130,7 @@ PolyMap = function( a ) {
 		gonzo = null;
 		var abbr = opt.state.toLowerCase();
 		var state = curState = stateByAbbr( abbr );
-		if( state.places ) {
+		if( state && state.places ) {
 			stateReady( state );
 		}
 		else {

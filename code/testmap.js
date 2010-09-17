@@ -127,11 +127,12 @@ function load() {
 	//});
 	
 	var match = location.search.match( /\Wstate=(\w+)/ );
+	var abbr = match && match[1] || 'us';
 	$('#stateSelector')
-		.val( match && match[1].toUpperCase() || 'US' )
+		.val( abbr.toUpperCase() )
 		.change( stateSelectorChange )
-		.keyup( stateSelectorChange )
-		.trigger( 'change' );
+		.keyup( stateSelectorChange );
+	loadState( abbr );
 	
 	function colorize( region ) {
 		// Test with random colors
