@@ -181,6 +181,60 @@ PolyMap = function( a ) {
 			else marker.setMap( map );
 		},
 		
+		//addMarkers: function( m ) {
+		//	if( pm.v2 ) return { remove: function() {} };
+		//	
+		//	function point( pt ) {
+		//		return new gm.Point( pt? pt.x : 0, pt ? pt.y : 0 );
+		//	}
+		//	function size( pt ) {
+		//		return new gm.Size( pt? pt.x : 0, pt ? pt.y : 0 );
+		//	}
+		//	function image( im ) {
+		//		return im && new gm.MarkerImage( im.url, size(im.size), point(im.origin), point(im.anchor) );
+		//	}
+		//	var icon = image( m.marker.icon );
+		//	var shadow = null; // image( m.marker.shadow );
+		//	var features = pm.indexFeatures( m.region );
+		//	var markers = [];
+		//	for( var names = m.names, name, i = -1;  name = names[++i]; ) {
+		//		var feature = features.by_name[name];
+		//		if( feature ) {
+		//			var centroid = feature.properties.centroid;
+		//			var marker = new gm.Marker({
+		//				clickable: false,
+		//				flat: ! shadow,
+		//				icon: icon,
+		//				map: pm.map,
+		//				position: new gm.LatLng( centroid[1], centroid[0] ),
+		//				shadow: shadow,
+		//				shape: { type:'rect', coord:[ 0, 0, 0, 0 ] },
+		//				visible: true
+		//			});
+		//			markers.push( marker );
+		//		}
+		//	}
+		//	
+		//	return {
+		//		remove: function() {
+		//			for( var marker, i = -1;  marker = markers[++i]; )
+		//				marker.setMap( null );
+		//		}
+		//	};
+		//},
+		
+		indexFeatures: function( region ) {
+			var features = region.geo.features;
+			if( ! features.by_name ) {
+				var by = features.by_name = {};
+				for( var i = -1, feature;  feature = features[++i]; ) {
+					by[feature.properties.name] = feature;
+					//feature.index = i;
+				}
+			}
+			return features;
+		},
+		
 		removeMarker: function( marker ) {
 			if( pm.v2 ) map.removeOverlay( marker );
 			else marker.setMap( null );
