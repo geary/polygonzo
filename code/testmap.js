@@ -30,6 +30,14 @@ function optionHTML( value, name, selected, disabled ) {
 	);
 }
 
+function randomInt( n ) {
+	return Math.floor( Math.random() * n );
+}
+
+function randomElement( array ) {
+	return array[ randomInt(array.length) ];
+};
+
 (function() {
 	var index = 0;
 	function option( value, name, selected, disabled ) {
@@ -75,7 +83,7 @@ function load() {
 	$window.resize( resize );
 	resize();
 	
-	var pm = new PolyMap({
+	var pm = window.pm = new PolyMap({
 		container: $testmap[0],
 		shapes: '../shapes/json/',
 		events: {
@@ -126,6 +134,11 @@ function load() {
 	//	pm.redraw();
 	//});
 	
+	$('#chkMarkers').click( function() {
+		if( region && region.geo ) region.geo.markers = !! this.checked;
+		pm && pm.redraw();
+	});
+	
 	var match = location.search.match( /\Wstate=(\w+)/ );
 	var abbr = match && match[1] || 'US';
 	$('#stateSelector')
@@ -134,8 +147,18 @@ function load() {
 		.keyup( stateSelectorChange )
 		.trigger( 'change' );
 	
+	function testMarker( name ) {
+		return {
+			url: 'images/' + name + '.png',
+			size: { x: 16, y: 16 },
+			anchor: { x: 7, y: 7 }
+		};
+	}
+	var testMarkers = [ testMarker('add'), testMarker('delete') ];
+	
 	function colorize( region ) {
 		// Test with random colors
+		region.geo.markers = !! $('#chkMarkers')[0].checked;
 		( region.geo.features || [region] ).forEach( function( feature ) {
 			//feature.fillColor = '#FFFFFF';
 			//feature.fillOpacity = 0;
@@ -144,6 +167,7 @@ function load() {
 			feature.strokeColor = '#000000';
 			feature.strokeOpacity = 0.2;
 			feature.strokeWidth = 1.5;
+			feature.marker = randomElement( testMarkers );
 		});
 	}
 	

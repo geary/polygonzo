@@ -14,11 +14,13 @@ PolyGonzo = {
 			PolyGonzo.onetime = true;
 		}
 		
-		var box = a.container, geo = a.geo, features = geo.features, canvas, ctx, tracker, zoom, offset;
+		var box = a.container, geo = a.geo, features = geo.features, canvas, ctx, tracker, markpane, zoom, offset;
 		
 		if( PolyGonzo.msie ) {
 			canvas = document.createElement( 'div' );
 			tracker = document.createElement( 'div' );
+			canvas.className = 'PolyGonzoCanvas';
+			tracker.className = 'PolyGonzoTracker';
 			canvas.appendChild( tracker );
 			tracker.zoom = 1;
 			tracker.style.zIndex = '1';
@@ -44,6 +46,17 @@ PolyGonzo = {
 		canvas.width = box.offsetWidth;
 		canvas.height = box.offsetHeight;
 		box.appendChild( canvas );
+		
+		// TODO: refactor
+		markpane = this.markpane = document.createElement( 'div' );
+		markpane.className = 'PolyGonzoMarkers';
+		markpane.zoom = 1;
+		markpane.style.position = 'absolute';
+		markpane.style.left = '0px';
+		markpane.style.top = '0px';
+		markpane.style.width = '100%';
+		markpane.style.height = '100%';
+		box.appendChild( markpane );
 		
 		// Temp jQuery dependency
 		var $canvas = $(canvas);
@@ -121,18 +134,20 @@ PolyGonzo = {
 				
 				//log( htmlEscape( vml.join('') ) );
 				var el = canvas.ownerDocument.createElement( 'div' );
+				el.className = 'PolyGonzoVmlOuter';
 				el.style.width =  canvas.clientWidth + 'px';
 				el.style.height = canvas.clientHeight + 'px';
 				el.style.overflow = 'hidden';
 				el.style.position = 'absolute';
 				canvas.appendChild( el );
-				el.insertAdjacentHTML( "beforeEnd", '<div>' + vml/*.join('')*/ + '</div>' );
+				el.insertAdjacentHTML( "beforeEnd", '<div class="PolyGonzoVmlInner">' + vml/*.join('')*/ + '</div>' );
 				//log( 'inserted VML' );
 			}
 		};
 		
 		this.remove = function() {
 			a.container.removeChild( canvas );
+			a.container.removeChild( markpane );
 		};
 		
 /*	Untested and out of date
@@ -166,6 +181,7 @@ PolyGonzo = {
 			
 			var totalPolys = 0, totalPoints = 0;
 			var nPlaces = features.length;
+			var markHtml = [];
 			
 			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
 				var polys = feature.geometry.coordinates, nPolys = polys.length;
@@ -183,6 +199,29 @@ PolyGonzo = {
 				var featureOffset = feature.offset || offset,
 					offsetX = featureOffset.x,
 					offsetY  = featureOffset.y;
+				
+				if( geo.markers && feature.marker ) {
+					var marker = feature.marker, c = feature.properties.centroid;
+					var centroid = ( feature.centroids = feature.centroids || [] )[zoom];
+					if( ! centroid ) {
+						var s = sin( c[1] * pi180 );
+						centroid = feature.centroids[zoom] = [
+							multX * c[0],
+							multY * log( (1+s)/(1-s) )
+						];
+					}
+					markHtml.push(
+						'<div style="position:absolute; overflow:hidden; width:', marker.size.x,
+								'px; height:', marker.size.y,
+								'px; left:', centroid[0] - marker.anchor.x + offsetX,
+								'px; top:', centroid[1] - marker.anchor.y + offsetY,
+								'px;">',
+							'<img src="', marker.url, '" style="width:', marker.size.x,
+									'px; height:', marker.size.y,
+									'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
+						'</div>'
+					);
+				}
 				
 				var
 					fillColor = feature.fillColor,
@@ -208,6 +247,9 @@ PolyGonzo = {
 					callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 				}
 			}
+			
+			markpane.innerHTML =
+				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
 			
 			geo.polygonzo = {
 				counts: { features: nPlaces, polys: totalPolys, points: totalPoints }
@@ -324,6 +366,7 @@ PolyGonzo = {
 				events: a.events
 			});
 			canvas = frame.canvas;
+			markpane = frame.markpane;
 		}
 		
 		function remove() {
@@ -353,6 +396,16 @@ PolyGonzo = {
 			
 			canvas.style.left = ( - offset.x - margin.x ) + 'px';
 			canvas.style.top = ( - offset.y - margin.y ) + 'px';
+			
+			// TODO: refactor
+			markpane.width = canvasSize.width;
+			markpane.height = canvasSize.height;
+			
+			markpane.style.width = canvasSize.width + 'px';
+			markpane.style.height = canvasSize.height + 'px';	
+			
+			markpane.style.left = ( - offset.x - margin.x ) + 'px';
+			markpane.style.top = ( - offset.y - margin.y ) + 'px';
 			
 			var zero = converter.fromLatLngToDivPixel(
 				new gm.LatLng( 0, 0 )
