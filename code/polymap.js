@@ -226,9 +226,11 @@ PolyMap = function( a ) {
 		indexFeatures: function( region ) {
 			var features = region.geo.features;
 			if( ! features.by_name ) {
-				var by = features.by_name = {};
+				var by_name = features.by_name = {};
+				var by_fips = features.by_fips = {};
 				for( var i = -1, feature;  feature = features[++i]; ) {
-					by[feature.properties.name] = feature;
+					by_name[feature.properties.name] = feature;
+					by_fips[feature.properties.fips] = feature;
 					//feature.index = i;
 				}
 			}
