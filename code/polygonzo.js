@@ -18,22 +18,10 @@ PolyGonzo = {
 		
 		if( PolyGonzo.msie ) {
 			canvas = document.createElement( 'div' );
-			tracker = document.createElement( 'div' );
 			canvas.className = 'PolyGonzoCanvas';
-			tracker.className = 'PolyGonzoTracker';
-			canvas.appendChild( tracker );
-			tracker.zoom = 1;
-			tracker.style.zIndex = '1';
-			tracker.style.position = 'absolute';
-			tracker.style.left = '0px';
-			tracker.style.top = '0px';
-			tracker.style.width = '100%';
-			tracker.style.height = '100%';
-			tracker.style.filter = 'alpha(opacity=0)';
-			tracker.style.backgroundColor = '#FFFFFF';
 		}
 		else {
-			canvas = tracker = document.createElement( 'canvas' );
+			canvas = document.createElement( 'canvas' );
 			ctx = this.ctx = canvas.getContext('2d');
 		}
 		
@@ -48,7 +36,7 @@ PolyGonzo = {
 		box.appendChild( canvas );
 		
 		// TODO: refactor
-		markpane = this.markpane = document.createElement( 'div' );
+		tracker = this.tracker = markpane = this.markpane = document.createElement( 'div' );
 		markpane.className = 'PolyGonzoMarkers';
 		markpane.zoom = 1;
 		markpane.style.position = 'absolute';
@@ -97,7 +85,7 @@ PolyGonzo = {
 				});
 			}
 			else {
-				tracker.nextSibling && canvas.removeChild( tracker.nextSibling );
+				if( canvas.firstChild ) canvas.removeChild( canvas.firstChild );
 				
 				var vml = [], iVml = 0;
 				eachPoly( geo, features, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
