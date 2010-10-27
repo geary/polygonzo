@@ -232,9 +232,18 @@ PolyGonzo = {
 							];
 						}
 					}
-					callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+					if( coords.length > 2 ) {
+						var first = coords[0], last = coords[coords.length-1];
+						if( first[0] != last[0]  ||  first[1] != last[1] )
+							coords.push( first );  // close polygon
+						callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+					}
 				}
 			}
+			
+			// Add a dummy polygon at the end to fix missing final poly in IE8
+			if( PolyGonzo.msie )
+				callback( offsetX, offsetY, {}, {}, [], 0, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
 			markpane.innerHTML =
 				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
