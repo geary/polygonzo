@@ -380,10 +380,17 @@ PolyGonzo = {
 			var margin = { x: width / 3, y: height / 3 };
 			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
-			var offset = {
-				x: canvas.offsetParent.offsetParent.offsetLeft,
-				y: canvas.offsetParent.offsetParent.offsetTop
-			};
+			// Get the drawing offset from the grandparent element,
+			// either from the -webkit-transform style or offsetLeft/Top.
+			// TODO: Find a way to do this without using Maps API internals.
+			var offsetter = canvas.offsetParent.offsetParent;
+			var transform = offsetter.style['-webkit-transform'];
+			var match = transform && transform.match(
+				/translate\s*\(\s*(-?\d+)px\s*,\s*(-?\d+)px\s*\)/
+			);
+			var offset = match ?
+				{ x: +match[1], y: +match[2] } :
+				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
 			
 			canvas.width = canvasSize.width;
 			canvas.height = canvasSize.height;
