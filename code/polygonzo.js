@@ -18,7 +18,6 @@ PolyGonzo = {
 		
 		if( PolyGonzo.msie ) {
 			canvas = document.createElement( 'div' );
-			canvas.className = 'PolyGonzoCanvas';
 		}
 		else {
 			canvas = document.createElement( 'canvas' );
@@ -26,6 +25,7 @@ PolyGonzo = {
 		}
 		
 		this.canvas = canvas;
+		canvas.className = 'PolyGonzoCanvas';
 		canvas.style.position = 'absolute';
 		canvas.style.left = '0px';
 		canvas.style.top = '0px';
