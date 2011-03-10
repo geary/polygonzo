@@ -14,7 +14,10 @@ PolyGonzo = {
 			PolyGonzo.onetime = true;
 		}
 		
-		var box = a.container, geo = a.geo, features = geo.features, canvas, ctx, tracker, markpane, zoom, offset;
+		var pane = a.container;
+		var panes = a.panes || { overlayLayer:pane, overlayImage:pane, overlayMouseTarget:pane };
+		
+		var geo = a.geo, features = geo.features, canvas, ctx, tracker, markers, zoom, offset;
 		
 		if( PolyGonzo.msie ) {
 			canvas = document.createElement( 'div' );
@@ -29,22 +32,27 @@ PolyGonzo = {
 		canvas.style.position = 'absolute';
 		canvas.style.left = '0px';
 		canvas.style.top = '0px';
-		canvas.style.width = box.offsetWidth + 'px';
-		canvas.style.height = box.offsetHeight + 'px';
-		canvas.width = box.offsetWidth;
-		canvas.height = box.offsetHeight;
-		box.appendChild( canvas );
+		canvas.style.width = panes.overlayLayer.offsetWidth + 'px';
+		canvas.style.height = panes.overlayLayer.offsetHeight + 'px';
+		canvas.width = panes.overlayLayer.offsetWidth;
+		canvas.height = panes.overlayLayer.offsetHeight;
+		panes.overlayLayer.appendChild( canvas );
 		
-		// TODO: refactor
-		tracker = this.tracker = markpane = this.markpane = document.createElement( 'div' );
-		markpane.className = 'PolyGonzoMarkers';
-		markpane.zoom = 1;
-		markpane.style.position = 'absolute';
-		markpane.style.left = '0px';
-		markpane.style.top = '0px';
-		markpane.style.width = '100%';
-		markpane.style.height = '100%';
-		box.appendChild( markpane );
+		function addDiv( className, pane ) {
+			var div = document.createElement( 'div' );
+			div.className = className;
+			div.zoom = 1;
+			div.style.position = 'absolute';
+			div.style.left = '0px';
+			div.style.top = '0px';
+			div.style.width = '100%';
+			div.style.height = '100%';
+			pane.appendChild( div );
+			return div;
+		}
+		
+		markers = this.markers = addDiv( 'PolyGonzoMarkers', panes.overlayImage );
+		tracker = this.tracker = addDiv( 'PolyGonzoTracker', panes.overlayMouseTarget );
 		
 		// Temp jQuery dependency
 		var $canvas = $(canvas);
@@ -134,8 +142,9 @@ PolyGonzo = {
 		};
 		
 		this.remove = function() {
-			a.container.removeChild( canvas );
-			a.container.removeChild( markpane );
+			panes.overlayLayer.removeChild( canvas );
+			panes.overlayImage.removeChild( markers );
+			panes.overlayMouseTarget.removeChild( tracker );
 		};
 		
 /*	Untested and out of date
@@ -245,7 +254,7 @@ PolyGonzo = {
 			if( PolyGonzo.msie )
 				callback( offsetX, offsetY, {}, {}, [], 0, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
-			markpane.innerHTML =
+			markers.innerHTML =
 				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
 			
 			geo.polygonzo = {
@@ -314,7 +323,7 @@ PolyGonzo = {
 	
 	// PolyGonzo.PgOverlay() - Google Maps JavaScript API V2/V3 overlay
 	PgOverlay: function( a ) {
-		var map = a.map, pane, frame, canvas, moveListener;
+		var map = a.map, pane, frame, canvas, markers, tracker, moveListener;
 		
 		var gm = google.maps;
 		var v2 = ! gm.event;
@@ -326,7 +335,8 @@ PolyGonzo = {
 				moveListener = gme.addListener( map, 'moveend', function() {
 					pg.redraw( null, true );
 				});
-				init( map.getPane( G_MAP_MAP_PANE ) );
+				var pane = map.getPane( G_MAP_MAP_PANE );
+				init({ poly:pane, marker:pane, mouse:pane });
 			};
 			
 			pg.remove = remove;
@@ -344,7 +354,7 @@ PolyGonzo = {
 					if( ! map._PolyGonzo_fitting )
 						pg.draw();
 				});
-				init( pg.getPanes().overlayLayer );
+				init( pg.getPanes() );
 			};
 			
 			pg.onRemove = remove;
@@ -355,15 +365,16 @@ PolyGonzo = {
 			};
 		};
 		
-		function init( pane ) {
+		function init( panes ) {
 			frame = new PolyGonzo.Frame({
-				container: pane,
+				panes: panes,
 				//group: a.group,
 				geo: a.geo,
 				events: a.events
 			});
 			canvas = frame.canvas;
-			markpane = frame.markpane;
+			markers = frame.markers;
+			tracker = frame.tracker;
 		}
 		
 		function remove() {
@@ -392,24 +403,20 @@ PolyGonzo = {
 				{ x: +match[1], y: +match[2] } :
 				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
 			
-			canvas.width = canvasSize.width;
-			canvas.height = canvasSize.height;
+			function move( element ) {
+				element.width = canvasSize.width;
+				element.height = canvasSize.height;
+				
+				element.style.width = canvasSize.width + 'px';
+				element.style.height = canvasSize.height + 'px';	
+				
+				element.style.left = ( - offset.x - margin.x ) + 'px';
+				element.style.top = ( - offset.y - margin.y ) + 'px';
+			}
 			
-			canvas.style.width = canvasSize.width + 'px';
-			canvas.style.height = canvasSize.height + 'px';	
-			
-			canvas.style.left = ( - offset.x - margin.x ) + 'px';
-			canvas.style.top = ( - offset.y - margin.y ) + 'px';
-			
-			// TODO: refactor
-			markpane.width = canvasSize.width;
-			markpane.height = canvasSize.height;
-			
-			markpane.style.width = canvasSize.width + 'px';
-			markpane.style.height = canvasSize.height + 'px';	
-			
-			markpane.style.left = ( - offset.x - margin.x ) + 'px';
-			markpane.style.top = ( - offset.y - margin.y ) + 'px';
+			move( canvas );
+			move( markers );
+			move( tracker );
 			
 			var zero = converter.fromLatLngToDivPixel(
 				new gm.LatLng( 0, 0 )
