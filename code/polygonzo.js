@@ -169,7 +169,6 @@ PolyGonzo = {
 		
 		function onetime() {
 			PolyGonzo.useVML = ! document.createElement( 'canvas' ).getContext;
-			//PolyGonzo.useVML = true;
 			if( PolyGonzo.useVML  &&  ! document.namespaces.pgz_vml_ ) {
 				document.namespaces.add( 'pgz_vml_', 'urn:schemas-microsoft-com:vml', '#default#VML' );
 				document.createStyleSheet().cssText = 'pgz_vml_\\:*{behavior:url(#default#VML)}';
