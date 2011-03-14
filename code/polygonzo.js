@@ -323,7 +323,7 @@ PolyGonzo = {
 	
 	// PolyGonzo.PgOverlay() - Google Maps JavaScript API V2/V3 overlay
 	PgOverlay: function( a ) {
-		var map = a.map, pane, frame, canvas, markers, tracker, moveListener;
+		var map = a.map, pane, frame, canvas, markers, tracker, moveListener, zoomListener;
 		
 		var gm = google.maps;
 		var v2 = ! gm.event;
@@ -354,10 +354,16 @@ PolyGonzo = {
 			var gme = gm.event, pg = new gm.OverlayView;
 			
 			pg.onAdd = function() {
-				moveListener = gme.addListener( map, 'center_changed', function() {
+				function listener() {
 					if( ! map._PolyGonzo_fitting )
-						pg.draw();
-				});
+						pg.onAddOneshot( pg.draw, 100 );
+				}
+				moveListener = gme.addListener( map, 'bounds_changed', listener );
+				// TODO: This shouldn't be necessary - bounds_changed is
+				// supposed to be sufficient. But it doesn't always redraw if
+				//  you zoom without moving the map. The oneshot timer
+				// shouldn't be needed either.
+				zoomListener = gme.addListener( map, 'zoom_changed', listener );
 				init( pg.getPanes() );
 			};
 			
@@ -368,6 +374,16 @@ PolyGonzo = {
 				draw( pg.getProjection(), div.clientWidth, div.clientHeight );
 			};
 		};
+		
+		pg.onAddOneshot = Oneshot();
+		
+		function Oneshot() {
+			var timer;
+			return function( fun, time ) {
+				clearTimeout( timer );
+				timer = setTimeout( fun, time );
+			};
+		}
 		
 		function init( panes ) {
 			frame = new PolyGonzo.Frame({
@@ -383,6 +399,7 @@ PolyGonzo = {
 		
 		function remove() {
 			gme.removeListener( moveListener );
+			zoomListener && gme.removeListener( zoomListener );
 			frame.remove();
 		}
 		
