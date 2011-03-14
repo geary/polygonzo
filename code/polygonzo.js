@@ -336,7 +336,11 @@ PolyGonzo = {
 					pg.redraw( null, true );
 				});
 				var pane = map.getPane( G_MAP_MAP_PANE );
-				init({ poly:pane, marker:pane, mouse:pane });
+				init({
+					overlayLayer: pane,
+					overlayImage: pane,
+					overlayMouseTarget: pane
+				});
 			};
 			
 			pg.remove = remove;
