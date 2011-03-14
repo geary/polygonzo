@@ -1,6 +1,6 @@
 // polymap.js
-// Copyright 2008-2010 Michael Geary - http://mg.to/
-// Use under any OSI license - http://www.opensource.org/
+// By Michael Geary - http://mg.to/
+// See UNLICENSE or http://unlicense.org/ for public domain notice
 
 // Outer wrapper function
 (function( $ ) {

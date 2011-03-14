@@ -1,8 +1,8 @@
 // polygonzo.js
-// Copyright 2008-2010 Ernest Delgado and Michael Geary
+// By Ernest Delgado and Michael Geary
 // http://ernestdelgado.com/
 // http://mg.to/
-// Use under any OSI license: http://www.opensource.org/
+// See UNLICENSE or http://unlicense.org/ for public domain notice
 
 PolyGonzo = {
 	
