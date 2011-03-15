@@ -188,7 +188,13 @@ PolyGonzo = {
 			var markHtml = [];
 			
 			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
-				var polys = feature.geometry.coordinates, nPolys = polys.length;
+				var geometry = feature.geometry, type = geometry.type;
+				var polys =
+					type == 'Polygon' ? [ feature.geometry.coordinates ] :
+					type == 'MultiPolygon' ? feature.geometry.coordinates :
+					null;
+				if( ! polys ) continue;
+				var nPolys = polys.length;
 				totalPolys += nPolys;
 				
 				var featureZoom = feature.zoom != null ? feature.zoom : zoom;
