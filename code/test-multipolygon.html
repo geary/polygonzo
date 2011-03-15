@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	
+	<title>PolyGonzo Test - Simple Polygon</title>
+	
+	<!--
+		By Michael Geary - http://mg.to/
+		See UNLICENSE or http://unlicense.org/ for public domain notice.
+	-->
+
+	<script type="text/javascript" src="http://www.google.com/jsapi">
+	</script>
+	<script type="text/javascript">
+		google.load( 'jquery', '1.5.1' );
+		google.load( 'maps', '3.3', { other_params: 'sensor=false' } );
+	</script>
+	<script type="text/javascript" src="polygonzo.js"></script>
+	<script type="text/javascript">
+	
+		var geo = {
+			"type": "FeatureCollection",
+			"features": [
+				{
+					"type": "Feature",
+					"bbox": [ -156.0620, 18.9209, -154.8078, 20.2737 ],
+					"geometry": {
+						"type": "MultiPolygon",
+						"coordinates": [
+							[
+								[
+									[ -155.6348, 18.9483 ],
+									[ -155.6841, 18.9209 ],
+									[ -155.7279, 18.9702 ],
+									[ -155.8813, 19.0359 ],
+									[ -155.9087, 19.0797 ],
+									[ -155.8868, 19.3481 ],
+									[ -155.9799, 19.6055 ],
+									[ -156.0620, 19.7315 ],
+									[ -156.0511, 19.7808 ],
+									[ -155.9251, 19.8574 ],
+									[ -155.8320, 19.9834 ],
+									[ -155.9087, 20.2025 ],
+									[ -155.8539, 20.2737 ],
+									[ -155.5965, 20.1258 ],
+									[ -155.4431, 20.0929 ],
+									[ -155.2022, 19.9670 ],
+									[ -155.0871, 19.8574 ],
+									[ -155.0871, 19.7260 ],
+									[ -155.0050, 19.7369 ],
+									[ -154.9831, 19.6438 ],
+									[ -154.8078, 19.5233 ],
+									[ -154.8407, 19.4631 ],
+									[ -154.9831, 19.3481 ],
+									[ -155.1583, 19.2659 ],
+									[ -155.2953, 19.2659 ],
+									[ -155.5143, 19.1345 ]
+								]
+							]
+						]
+					}
+				}
+			]
+		};
+		
+		function init() {
+			
+			var gm = google.maps;
+			
+			function fitBbox( map, bbox ) {
+				map.fitBounds( new gm.LatLngBounds(
+					new gm.LatLng( bbox[1], bbox[0] ),
+					new gm.LatLng( bbox[3], bbox[2] )
+				) );
+			}
+			
+			var mapdiv = document.getElementById( 'map' );
+			var map = new gm.Map( mapdiv, {
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			});
+			
+			var feature = geo.features[0];
+			fitBbox( map, feature.bbox );
+			
+			// Random fill and stroke colors for testing
+			feature.fillColor = '#' + Math.random().toString(16).slice(2,8);
+			feature.fillOpacity = Math.random() * .5 + .1;
+			feature.strokeColor = '#000000';
+			feature.strokeOpacity = 0.2;
+			feature.strokeWidth = 1;
+				
+			var gonzo = new PolyGonzo.PgOverlay({
+				map: map,
+				geo: geo
+			});
+			gonzo.setMap( map );
+		}
+	</script>
+	
+</head>
+
+<body onload="init()">
+	
+	<div style="margin:20px;">
+		
+		<div id="map" style="width:800px; height:600px; border:1px solid #AAA;">
+			&nbsp;
+		</div>
+		
+	</div>
+	
+</body>
+
+</html>
