@@ -443,6 +443,16 @@ PolyGonzo = {
 			frame.remove();
 		}
 		
+		function getTransform( style ) {
+			return(
+				style.transform ||
+				style.WebkitTransform ||
+				style.msTransform ||
+				style.MozTransform ||
+				style.OTransform
+			);
+		}
+		
 		function draw( converter, width, height ) {
 			if( a.log ) {
 				a.log.reset( true );
@@ -455,8 +465,10 @@ PolyGonzo = {
 			// Get the drawing offset from the grandparent element,
 			// either from the -webkit-transform style or offsetLeft/Top.
 			// TODO: Find a way to do this without using Maps API internals.
-			var offsetter = canvas.offsetParent.offsetParent;
-			var transform = offsetter.style['-webkit-transform'];
+			var parent = canvas.offsetParent;
+			if( ! parent ) return;
+			var offsetter = parent.offsetParent;
+			var transform = getTransform( offsetter.style );
 			var match = transform && transform.match(
 				/translate\s*\(\s*(-?\d+)px\s*,\s*(-?\d+)px\s*\)/
 			);
