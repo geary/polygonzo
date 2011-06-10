@@ -17,7 +17,8 @@ PolyGonzo = {
 		var pane = a.container;
 		var panes = a.panes || { overlayLayer:pane, overlayImage:pane, overlayMouseTarget:pane };
 		
-		var geo = a.geo, features = geo.features, canvas, ctx, tracker, markers, zoom, offset;
+		var geos = a.geos || [ a.geo ];
+		var canvas, ctx, tracker, markers, zoom, offset;
 		
 		if( PolyGonzo.useVML ) {
 			canvas = document.createElement( 'div' );
@@ -77,7 +78,7 @@ PolyGonzo = {
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
 				
-				eachPoly( geo, features, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					var c = ctx;
 					c.beginPath();
 					
@@ -103,7 +104,7 @@ PolyGonzo = {
 				if( canvas.firstChild ) canvas.removeChild( canvas.firstChild );
 				
 				var vml = [], iVml = 0;
-				eachPoly( geo, features, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					
 					vml[iVml++] = '<pgz_vml_:shape style="position:absolute;width:10px;height:10px;" coordorigin="';
 					vml[iVml++] = -~~( offsetX * 10 - .5 );
@@ -175,117 +176,120 @@ PolyGonzo = {
 			}
 		}
 		
-		function eachPoly( geo, features, zoom, offset, callback ) {
-			var crs = geo.crs  &&  geo.crs.type == 'name'  &&  geo.crs.properties.name || '';
-			var mercator = /EPSG:+3857$/.test( crs );
-			if( mercator ) {
-			}
-			else {
-				var pi = Math.PI, log = Math.log, sin = Math.sin,
-					big = 1 << 28,
-					big180 = big / 180,
-					pi180 = pi / 180,
-					radius = big / pi;
-			}
-			var oldZoom = Infinity;
-			
-			var totalPolys = 0, totalPoints = 0;
-			var nPlaces = features.length;
-			var markHtml = [];
-			
-			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
-				var geometry = feature.geometry, type = geometry.type;
-				var polys =
-					type == 'Polygon' ? [ feature.geometry.coordinates ] :
-					type == 'MultiPolygon' ? feature.geometry.coordinates :
-					null;
-				if( ! polys ) continue;
-				var nPolys = polys.length;
-				totalPolys += nPolys;
-				
-				var featureZoom = feature.zoom != null ? feature.zoom : zoom;
-				if( featureZoom != oldZoom ) {
-					oldZoom = featureZoom;
-					if( mercator ) {
-						var
-							multX = Math.pow( 2, featureZoom ) / 156543.03392,
-							multY = -multX;
-					}
-					else {
-						var
-							divisor = Math.pow( 2, 21 - featureZoom ),
-							multX = big180 / divisor,
-							multY = -radius / divisor / 2;
-					}
+		function eachPoly( geos, zoom, offset, callback ) {
+			var totalFeatures = 0, totalPolys = 0, totalPoints = 0;
+			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
+				var features = geo.features;
+				var crs = geo.crs  &&  geo.crs.type == 'name'  &&  geo.crs.properties.name || '';
+				var mercator = /EPSG:+3857$/.test( crs );
+				if( mercator ) {
 				}
+				else {
+					var pi = Math.PI, log = Math.log, sin = Math.sin,
+						big = 1 << 28,
+						big180 = big / 180,
+						pi180 = pi / 180,
+						radius = big / pi;
+				}
+				var oldZoom = Infinity;
 				
-				var featureOffset = feature.offset || offset,
-					offsetX = featureOffset.x,
-					offsetY  = featureOffset.y;
+				totalFeatures += features.length;
+				var markHtml = [];
 				
-				if( geo.markers && feature.marker ) {
-					var marker = feature.marker, c = feature.centroid;
-					var centroid = ( feature.centroids = feature.centroids || [] )[zoom];
-					if( ! centroid ) {
+				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
+					var geometry = feature.geometry, type = geometry.type;
+					var polys =
+						type == 'Polygon' ? [ feature.geometry.coordinates ] :
+						type == 'MultiPolygon' ? feature.geometry.coordinates :
+						null;
+					if( ! polys ) continue;
+					var nPolys = polys.length;
+					totalPolys += nPolys;
+					
+					var featureZoom = feature.zoom != null ? feature.zoom : zoom;
+					if( featureZoom != oldZoom ) {
+						oldZoom = featureZoom;
 						if( mercator ) {
+							var
+								multX = Math.pow( 2, featureZoom ) / 156543.03392,
+								multY = -multX;
 						}
 						else {
-							var s = sin( c[1] * pi180 );
-							centroid = feature.centroids[zoom] = [
-								multX * c[0],
-								multY * log( (1+s)/(1-s) )
-							];
+							var
+								divisor = Math.pow( 2, 21 - featureZoom ),
+								multX = big180 / divisor,
+								multY = -radius / divisor / 2;
 						}
 					}
-					markHtml.push(
-						'<div style="position:absolute; overflow:hidden; width:', marker.size.x,
-								'px; height:', marker.size.y,
-								'px; left:', centroid[0] - marker.anchor.x + offsetX,
-								'px; top:', centroid[1] - marker.anchor.y + offsetY,
-								'px;">',
-							'<img src="', marker.url, '" style="width:', marker.size.x,
-									'px; height:', marker.size.y,
-									'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
-						'</div>'
-					);
-				}
-				
-				var
-					fillColor = feature.fillColor,
-					fillOpacity = feature.fillOpacity,
-					strokeColor = feature.strokeColor,
-					strokeOpacity = feature.strokeOpacity,
-					strokeWidth = feature.strokeWidth;
-				
-				for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
-					var points = poly[0], nPoints = points.length;
-					totalPoints += nPoints;
-					var coords = ( poly.coords = poly.coords || [] )[zoom];
-					if( ! coords ) {
-						coords = poly.coords[zoom] = new Array( nPoints );
-						if( mercator ) {
-							for( var iPoint = -1, point;  point = points[++iPoint]; ) {
-								coords[iPoint] = [
-									multX * point[0],
-									multY * point[1]
-								];
+					
+					var featureOffset = feature.offset || offset,
+						offsetX = featureOffset.x,
+						offsetY  = featureOffset.y;
+					
+					if( geo.markers && feature.marker ) {
+						var marker = feature.marker, c = feature.centroid;
+						var centroid = ( feature.centroids = feature.centroids || [] )[zoom];
+						if( ! centroid ) {
+							if( mercator ) {
 							}
-						}
-						else {
-							for( var iPoint = -1, point;  point = points[++iPoint]; ) {
-								var s = sin( point[1] * pi180 );
-								coords[iPoint] = [
-									multX * point[0],
+							else {
+								var s = sin( c[1] * pi180 );
+								centroid = feature.centroids[zoom] = [
+									multX * c[0],
 									multY * log( (1+s)/(1-s) )
 								];
 							}
 						}
+						markHtml.push(
+							'<div style="position:absolute; overflow:hidden; width:', marker.size.x,
+									'px; height:', marker.size.y,
+									'px; left:', centroid[0] - marker.anchor.x + offsetX,
+									'px; top:', centroid[1] - marker.anchor.y + offsetY,
+									'px;">',
+								'<img src="', marker.url, '" style="width:', marker.size.x,
+										'px; height:', marker.size.y,
+										'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
+							'</div>'
+						);
 					}
-					if( coords.length > 2 ) {
-						var first = coords[0], last = coords[coords.length-1];
-						if( first[0] != last[0]  ||  first[1] != last[1] )
-							coords.push( first );  // close polygon
-						callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+					
+					var
+						fillColor = feature.fillColor,
+						fillOpacity = feature.fillOpacity,
+						strokeColor = feature.strokeColor,
+						strokeOpacity = feature.strokeOpacity,
+						strokeWidth = feature.strokeWidth;
+					
+					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
+						var points = poly[0], nPoints = points.length;
+						totalPoints += nPoints;
+						var coords = ( poly.coords = poly.coords || [] )[zoom];
+						if( ! coords ) {
+							coords = poly.coords[zoom] = new Array( nPoints );
+							if( mercator ) {
+								for( var iPoint = -1, point;  point = points[++iPoint]; ) {
+									coords[iPoint] = [
+										multX * point[0],
+										multY * point[1]
+									];
+								}
+							}
+							else {
+								for( var iPoint = -1, point;  point = points[++iPoint]; ) {
+									var s = sin( point[1] * pi180 );
+									coords[iPoint] = [
+										multX * point[0],
+										multY * log( (1+s)/(1-s) )
+									];
+								}
+							}
+						}
+						if( coords.length > 2 ) {
+							var first = coords[0], last = coords[coords.length-1];
+							if( first[0] != last[0]  ||  first[1] != last[1] )
+								coords.push( first );  // close polygon
+							callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+						}
 					}
 				}
 			}
@@ -297,8 +301,12 @@ PolyGonzo = {
 			markers.innerHTML =
 				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
 			
-			geo.polygonzo = {
-				counts: { features: nPlaces, polys: totalPolys, points: totalPoints }
+			geos.polygonzo = {
+				counts: {
+					features: totalFeatures,
+					polys: totalPolys,
+					points: totalPoints
+				}
 			};
 		}
 		
@@ -329,15 +337,19 @@ PolyGonzo = {
 		}
 		
 		function hittest( x, y ) {
-			for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
-				hitZoom = feature.zoom != null ? feature.zoom : zoom;
-				hitOffset = feature.offset || offset;
-				var featureX = x - hitOffset.x, featureY = y - hitOffset.y
-				var polys = feature.geometry.coordinates;
-				for( var iPoly = -1, poly;  poly = polys[++iPoly]; )
-					if( contains( poly, featureX, featureY, hitZoom ) ) {
-						return { /*parent:entity,*/ feature:feature, poly:poly };
-					}
+			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
+				if( geo.hittest === false ) continue;
+				var features = geo.features;
+				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
+					hitZoom = feature.zoom != null ? feature.zoom : zoom;
+					hitOffset = feature.offset || offset;
+					var featureX = x - hitOffset.x, featureY = y - hitOffset.y
+					var polys = feature.geometry.coordinates;
+					for( var iPoly = -1, poly;  poly = polys[++iPoly]; )
+						if( contains( poly, featureX, featureY, hitZoom ) ) {
+							return { /*parent:entity,*/ feature:feature, poly:poly };
+						}
+				}
 			}
 			return null;
 		}
@@ -429,7 +441,7 @@ PolyGonzo = {
 			frame = new PolyGonzo.Frame({
 				panes: panes,
 				//group: a.group,
-				geo: a.geo,
+				geos: a.geos || [ a.geo ],
 				events: a.events
 			});
 			canvas = frame.canvas;
@@ -503,7 +515,7 @@ PolyGonzo = {
 			});
 			
 			if( a.log ) {
-				var counts = a.geo.polygonzo.counts;
+				var counts = a.geos.polygonzo.counts;
 				a.log(
 					counts.features, 'places,',
 					counts.polys, 'polys,',
