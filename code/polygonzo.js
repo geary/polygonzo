@@ -229,6 +229,28 @@ PolyGonzo = {
 						}
 					}
 					
+					var bbox = feature.bbox;
+					if( bbox ) {
+						var box = ( feature.boxes = feature.boxes || [] )[zoom];
+						if( ! box ) {
+							if( mercator ) {
+								box = [
+									multX * bbox[0], multY * bbox[1],
+									multX * bbox[2], multY * bbox[3]
+								];
+							}
+							else {
+								var s1 = sin( bbox[1] * pi180 );
+								var s3 = sin( bbox[3] * pi180 );
+								box = [
+									multX * bbox[0], multY * log( (1+s1) / (1-s1) ),
+									multX * bbox[2], multY * log( (1+s3) / (1-s3) )
+								];
+							}
+							feature.boxes[zoom] = box;
+						}
+					}
+					
 					var featureOffset = feature.offset || offset,
 						offsetX = featureOffset.x,
 						offsetY  = featureOffset.y;
@@ -351,12 +373,20 @@ PolyGonzo = {
 				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
 					hitZoom = feature.zoom != null ? feature.zoom : zoom;
 					hitOffset = feature.offset || offset;
-					var featureX = x - hitOffset.x, featureY = y - hitOffset.y
+					var featureX = x - hitOffset.x, featureY = y - hitOffset.y;
+					var box = feature.boxes[hitZoom];
+					if( box && (
+					   featureX < box[0]  ||  featureX > box[2]  ||
+					   featureY < box[3]  ||  featureY > box[1]
+					) ) {
+						continue;
+					}
 					var polys = feature.geometry.coordinates;
-					for( var iPoly = -1, poly;  poly = polys[++iPoly]; )
+					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
 						if( contains( poly, featureX, featureY, hitZoom ) ) {
 							return { /*parent:entity,*/ feature:feature, poly:poly };
 						}
+					}
 				}
 			}
 			return null;
