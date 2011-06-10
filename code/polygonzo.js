@@ -17,6 +17,9 @@ PolyGonzo = {
 		var pane = a.container;
 		var panes = a.panes || { overlayLayer:pane, overlayImage:pane, overlayMouseTarget:pane };
 		
+		if( ! a.events )
+			delete panes.overlayMouseTarget;
+		
 		var geos = a.geos || [ a.geo ];
 		var canvas, ctx, tracker, markers, zoom, offset;
 		
@@ -52,14 +55,18 @@ PolyGonzo = {
 			return div;
 		}
 		
-		markers = this.markers = addDiv( 'PolyGonzoMarkers', panes.overlayImage );
-		tracker = this.tracker = addDiv( 'PolyGonzoTracker', panes.overlayMouseTarget );
+		if( panes.overlayImage )
+			markers = this.markers = addDiv( 'PolyGonzoMarkers', panes.overlayImage );
 		
-		if( ! PolyGonzo.useVML ) {
-			// Tracker needs a background color in IE9, doesn't hurt in
-			// other browsers except when VML is used
-			tracker.style.backgroundColor = 'white';
-			tracker.style.opacity = 0;
+		if( panes.overlayMouseTarget ) {
+			tracker = this.tracker = addDiv( 'PolyGonzoTracker', panes.overlayMouseTarget );
+			
+			if( ! PolyGonzo.useVML ) {
+				// Tracker needs a background color in IE9, doesn't hurt in
+				// other browsers except when VML is used
+				tracker.style.backgroundColor = 'white';
+				tracker.style.opacity = 0;
+			}
 		}
 		
 		// Temp jQuery dependency
@@ -150,9 +157,9 @@ PolyGonzo = {
 		};
 		
 		this.remove = function() {
-			panes.overlayLayer.removeChild( canvas );
-			panes.overlayImage.removeChild( markers );
-			panes.overlayMouseTarget.removeChild( tracker );
+			if( canvas ) panes.overlayLayer.removeChild( canvas );
+			if( markers ) panes.overlayImage.removeChild( markers );
+			if( tracker ) panes.overlayMouseTarget.removeChild( tracker );
 		};
 		
 /*	Untested and out of date
@@ -298,8 +305,9 @@ PolyGonzo = {
 			if( PolyGonzo.useVML )
 				callback( offsetX, offsetY, {}, {}, [], 0, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
-			markers.innerHTML =
-				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
+			if( markers )
+				markers.innerHTML =
+					'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
 			
 			geos.polygonzo = {
 				counts: {
@@ -391,7 +399,7 @@ PolyGonzo = {
 				init({
 					overlayLayer: pane,
 					overlayImage: pane,
-					overlayMouseTarget: pane
+					overlayMouseTarget: a.events && pane
 				});
 			};
 			
@@ -416,7 +424,12 @@ PolyGonzo = {
 				//  you zoom without moving the map. The oneshot timer
 				// shouldn't be needed either.
 				zoomListener = gme.addListener( map, 'zoom_changed', listener );
-				init( pg.getPanes() );
+				var p = pg.getPanes();
+				init({
+					overlayLayer: p.overlayLayer,
+					overlayImage: p.overlayImage,
+					overlayMouseTarget: p.overlayMouseTarget
+				});
 			};
 			
 			pg.onRemove = remove;
@@ -489,6 +502,8 @@ PolyGonzo = {
 				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
 			
 			function move( element ) {
+				if( ! element ) return;
+				
 				element.width = canvasSize.width;
 				element.height = canvasSize.height;
 				
