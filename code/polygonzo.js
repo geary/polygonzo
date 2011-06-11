@@ -85,17 +85,21 @@ PolyGonzo = {
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
 				
-				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					var c = ctx;
 					c.beginPath();
 					
-					var coord = coords[0];
-					c.moveTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
-					
-					for( var iCoord = 0, coord;  coord = coords[++iCoord]; ) {
-						c.lineTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
+					for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
+						var coords = ring.coords[zoom];
+						
+						var coord = coords[0];
+						c.moveTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
+						
+						for( var coord, iCoord = 0;  coord = coords[++iCoord]; ) {
+							c.lineTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
+						}
+						c.closePath();
 					}
-					c.closePath();
 					
 					c.globalAlpha = strokeOpacity;
 					c.strokeStyle = strokeColor;
@@ -111,24 +115,31 @@ PolyGonzo = {
 				if( canvas.firstChild ) canvas.removeChild( canvas.firstChild );
 				
 				var vml = [], iVml = 0;
-				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, coords, nCoords, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
+				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					
 					vml[iVml++] = '<pgz_vml_:shape style="position:absolute;width:10px;height:10px;" coordorigin="';
 					vml[iVml++] = -~~( offsetX * 10 - .5 );
 					vml[iVml++] = ' ';
 					vml[iVml++] = -~~( offsetY * 10 - .5 );
-					vml[iVml++] = '" coordsize="100 100" path=" m ';
+					vml[iVml++] = '" coordsize="100 100" path=" ';
 					
-					for( var iCoord = -1, coord;  coord = coords[++iCoord]; ) {
-						vml[iVml++] = ~~( coord[0] * 10 );
-						vml[iVml++] = ',';
-						vml[iVml++] = ~~( coord[1] * 10);
-						vml[iVml++] = ' l ';
+					for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
+						var coords = ring.coords[zoom];
+						
+						vml[iVml++] = ' m ';
+						
+						for( var iCoord = -1, coord;  coord = coords[++iCoord]; ) {
+							vml[iVml++] = ~~( coord[0] * 10 );
+							vml[iVml++] = ',';
+							vml[iVml++] = ~~( coord[1] * 10);
+							vml[iVml++] = ' l ';
+						}
+						
+						iVml--;  // remove last ' l '
+						vml[iVml++] = ' x ';
 					}
 					
-					iVml--;  // remove last ' l '
-					
-					vml[iVml++] = ' x "><pgz_vml_:stroke color="';
+					vml[iVml++] = ' "><pgz_vml_:stroke color="';
 					vml[iVml++] = strokeColor;
 					vml[iVml++] = '" opacity="';
 					vml[iVml++] = strokeOpacity;
@@ -287,38 +298,43 @@ PolyGonzo = {
 						fillOpacity = feature.fillOpacity,
 						strokeColor = feature.strokeColor,
 						strokeOpacity = feature.strokeOpacity,
-						strokeWidth = feature.strokeWidth;
+						strokeWidth = feature.strokeWidth,
+						haveRing = false;
 					
-					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
-						var points = poly[0], nPoints = points.length;
-						totalPoints += nPoints;
-						var coords = ( poly.coords = poly.coords || [] )[zoom];
-						if( ! coords ) {
-							coords = poly.coords[zoom] = new Array( nPoints );
-							if( mercator ) {
-								for( var iPoint = -1, point;  point = points[++iPoint]; ) {
-									coords[iPoint] = [
-										multX * point[0],
-										multY * point[1]
-									];
+					for( var poly, iPoly = -1;  poly = polys[++iPoly]; ) {
+						for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
+							var nPoints = ring.length;
+							totalPoints += nPoints;
+							var coords = ( ring.coords = ring.coords || [] )[zoom];
+							if( ! coords ) {
+								coords = ring.coords[zoom] = new Array( nPoints );
+								if( mercator ) {
+									for( var iPoint = -1, point;  point = ring[++iPoint]; ) {
+										coords[iPoint] = [
+											multX * point[0],
+											multY * point[1]
+										];
+									}
+								}
+								else {
+									for( var iPoint = -1, point;  point = ring[++iPoint]; ) {
+										var s = sin( point[1] * pi180 );
+										coords[iPoint] = [
+											multX * point[0],
+											multY * log( (1+s)/(1-s) )
+										];
+									}
 								}
 							}
-							else {
-								for( var iPoint = -1, point;  point = points[++iPoint]; ) {
-									var s = sin( point[1] * pi180 );
-									coords[iPoint] = [
-										multX * point[0],
-										multY * log( (1+s)/(1-s) )
-									];
-								}
+							if( coords.length > 2 ) {
+								var first = coords[0], last = coords[coords.length-1];
+								if( first[0] != last[0]  ||  first[1] != last[1] )
+									coords.push( first );  // close polygon
+								haveRing = true;
 							}
 						}
-						if( coords.length > 2 ) {
-							var first = coords[0], last = coords[coords.length-1];
-							if( first[0] != last[0]  ||  first[1] != last[1] )
-								coords.push( first );  // close polygon
-							callback( offsetX, offsetY, feature, poly, coords, nPoints, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
-						}
+						if( haveRing )
+							callback( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 					}
 				}
 			}
@@ -393,19 +409,22 @@ PolyGonzo = {
 		}
 		
 		function contains( poly, x, y, zoom ) {
-			var coords = poly.coords[zoom];
-			if( ! coords ) return false;
 			var inside = false;
-			var v = coords[coords.length-1], x1 = v[0], y1 = v[1];
-		
-			for( var i = -1;  v = coords[++i]; ) {
-				var x2 = v[0], y2 = v[1];
+			for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
+				var coords = ring.coords[zoom];
+				if( ! coords ) continue;
 				
-				if( ( y1 < y  &&  y2 >= y ) || ( y2 < y  &&  y1 >= y ) )
-					if ( x1 + ( y - y1 ) / ( y2 - y1 ) * ( x2 - x1 ) < x )
-						inside = ! inside;
-				
-				x1 = x2, y1 = y2;
+				var v = coords[coords.length-1], x1 = v[0], y1 = v[1];
+			
+				for( var i = -1;  v = coords[++i]; ) {
+					var x2 = v[0], y2 = v[1];
+					
+					if( ( y1 < y  &&  y2 >= y ) || ( y2 < y  &&  y1 >= y ) )
+						if ( x1 + ( y - y1 ) / ( y2 - y1 ) * ( x2 - x1 ) < x )
+							inside = ! inside;
+					
+					x1 = x2, y1 = y2;
+				}
 			}
 			return inside;
 		}
