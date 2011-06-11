@@ -91,6 +91,7 @@ PolyGonzo = {
 					
 					for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
 						var coords = ring.coords[zoom];
+						if( ! coords  ||  coords.length < 3 ) continue;
 						
 						var coord = coords[0];
 						c.moveTo( ~~( coord[0] + offsetX ) + .5, ~~( coord[1] + offsetY ) + .5 );
@@ -125,6 +126,7 @@ PolyGonzo = {
 					
 					for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
 						var coords = ring.coords[zoom];
+						if( ! coords  ||  coords.length < 3 ) continue;
 						
 						vml[iVml++] = ' m ';
 						
