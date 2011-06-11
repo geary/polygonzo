@@ -9,6 +9,8 @@ PolyGonzo = {
 	// PolyGonzo.Frame() - Canvas/VML frame
 	Frame: function( a ) {
 		
+		var frame = this;
+		
 		if( ! PolyGonzo.onetime ) {
 			onetime();
 			PolyGonzo.onetime = true;
@@ -69,16 +71,14 @@ PolyGonzo = {
 			}
 		}
 		
-		// Temp jQuery dependency
-		var $canvas = $(canvas);
-		var canvasOffset;
 		var hitWhere, hitZoom, hitOffset;
 		
 		for( var name in ( a.events || {} ) )
 			wireEvent( name );
 		
 		this.draw = function( b ) {
-			canvasOffset = hitWhere = null;
+			hitWhere = null;
+			
 			zoom = b.zoom;
 			offset = b.offset;
 			
@@ -173,6 +173,34 @@ PolyGonzo = {
 			if( canvas ) panes.overlayLayer.removeChild( canvas );
 			if( markers ) panes.overlayImage.removeChild( markers );
 			if( tracker ) panes.overlayMouseTarget.removeChild( tracker );
+		};
+		
+		this.getTransform = function( style ) {
+			return(
+				style.transform ||
+				style.WebkitTransform ||
+				style.msTransform ||
+				style.MozTransform ||
+				style.OTransform
+			);
+		};
+		
+		this.getTransformOffset = function() {
+			// Get the drawing offset from the grandparent element,
+			// either from the -webkit-transform style or offsetLeft/Top.
+			// TODO: Find a way to do this without using Maps API internals.
+			var parent = canvas.offsetParent;
+			if( ! parent ) return null;
+			var offsetter = parent.offsetParent;
+			var transform = this.getTransform( offsetter.style );
+			var match = transform && transform.match(
+				/translate\s*\(\s*(-?\d+)px\s*,\s*(-?\d+)px\s*\)/
+			);
+			var offset = match ?
+				{ x: +match[1], y: +match[2] } :
+				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
+			offset.isTransform = !! match;
+			return offset;
 		};
 		
 /*	Untested and out of date
@@ -361,8 +389,14 @@ PolyGonzo = {
 		function wireEvent( name ) {
 			tracker[ 'on' + name ] = function( e ) {
 				e = e || window.event;
-				canvasOffset = canvasOffset || $canvas.offset();
-				var x = -canvasOffset.left, y = -canvasOffset.top;
+				var offset = PolyGonzo.elementOffset( canvas );
+				if( ! offset ) return;
+				var x = -offset.left, y = -offset.top;
+				var transform = frame.getTransformOffset();
+				if( transform.isTransform ) {
+					x -= transform.x;
+					y -= transform.y;
+				}
 				if( e.pageX || e.pageY ) {
 					x += e.pageX;
 					y += e.pageY;
@@ -519,16 +553,6 @@ PolyGonzo = {
 			frame.remove();
 		}
 		
-		function getTransform( style ) {
-			return(
-				style.transform ||
-				style.WebkitTransform ||
-				style.msTransform ||
-				style.MozTransform ||
-				style.OTransform
-			);
-		}
-		
 		function draw( converter, width, height ) {
 			if( a.log ) {
 				a.log.reset( true );
@@ -538,19 +562,8 @@ PolyGonzo = {
 			var margin = { x: width / 3, y: height / 3 };
 			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
-			// Get the drawing offset from the grandparent element,
-			// either from the -webkit-transform style or offsetLeft/Top.
-			// TODO: Find a way to do this without using Maps API internals.
-			var parent = canvas.offsetParent;
-			if( ! parent ) return;
-			var offsetter = parent.offsetParent;
-			var transform = getTransform( offsetter.style );
-			var match = transform && transform.match(
-				/translate\s*\(\s*(-?\d+)px\s*,\s*(-?\d+)px\s*\)/
-			);
-			var offset = match ?
-				{ x: +match[1], y: +match[2] } :
-				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
+			var offset = frame.getTransformOffset();
+			if( ! offset ) return;
 			
 			function move( element ) {
 				if( ! element ) return;
@@ -591,5 +604,15 @@ PolyGonzo = {
 		}
 		
 		return pg;
+	},
+	
+	elementOffset: function( e ) {
+		var left = 0, top = 0;
+		while( e ) {
+			left += e.offsetLeft;
+			top += e.offsetTop;
+			e = e.offsetParent;
+		}
+		return { left:left, top:top };
 	}
 };
