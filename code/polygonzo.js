@@ -25,7 +25,7 @@ PolyGonzo = {
 		var geos = a.geos || [ a.geo ];
 		var canvas, ctx, tracker, markers, zoom, offset;
 		
-		if( PolyGonzo.useVML ) {
+		if( PolyGonzo.isVML() ) {
 			canvas = document.createElement( 'div' );
 		}
 		else {
@@ -63,7 +63,7 @@ PolyGonzo = {
 		if( panes.overlayMouseTarget ) {
 			tracker = this.tracker = addDiv( 'PolyGonzoTracker', panes.overlayMouseTarget );
 			
-			if( ! PolyGonzo.useVML ) {
+			if( ! PolyGonzo.isVML() ) {
 				// Tracker needs a background color in IE9, doesn't hurt in
 				// other browsers except when VML is used
 				tracker.style.backgroundColor = 'white';
@@ -217,8 +217,7 @@ PolyGonzo = {
 */
 		
 		function onetime() {
-			PolyGonzo.useVML = ! document.createElement( 'canvas' ).getContext;
-			if( PolyGonzo.useVML  &&  ! document.namespaces.pgz_vml_ ) {
+			if( PolyGonzo.isVML()  &&  ! document.namespaces.pgz_vml_ ) {
 				document.namespaces.add( 'pgz_vml_', 'urn:schemas-microsoft-com:vml', '#default#VML' );
 				document.createStyleSheet().cssText = 'pgz_vml_\\:*{behavior:url(#default#VML)}';
 			}
@@ -370,7 +369,7 @@ PolyGonzo = {
 			}
 			
 			// Add a dummy polygon at the end to fix missing final poly in IE8
-			if( PolyGonzo.useVML )
+			if( PolyGonzo.isVML() )
 				callback( offsetX, offsetY, {}, {}, [], 0, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
 			if( markers )
@@ -614,5 +613,12 @@ PolyGonzo = {
 			e = e.offsetParent;
 		}
 		return { left:left, top:top };
+	},
+	
+	isVML: function() {
+		if( PolyGonzo.isVML.yes == null )
+			PolyGonzo.isVML.yes =
+				! document.createElement( 'canvas' ).getContext;
+		return PolyGonzo.isVML.yes;
 	}
 };
