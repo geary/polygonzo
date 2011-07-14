@@ -301,7 +301,7 @@ PolyGonzo = {
 			markers.innerHTML =
 				'<div class="PolyGonzoMarkerList">' + markHtml.join('') + '</div>';
 			
-			geos.polygonzo = {
+			a.polygonzo = {
 				counts: {
 					features: totalFeatures,
 					polys: totalPolys,
@@ -514,8 +514,8 @@ PolyGonzo = {
 				zoom: map.getZoom()
 			});
 			
-			if( a.log ) {
-				var counts = a.geos.polygonzo.counts;
+			var counts = a.polygonzo && a.polygonzo.counts;
+			if( a.log && counts ) {
 				a.log(
 					counts.features, 'places,',
 					counts.polys, 'polys,',
