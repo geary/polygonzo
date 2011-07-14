@@ -176,12 +176,18 @@ PolyGonzo = {
 		}
 		
 		function eachPoly( geo, features, zoom, offset, callback ) {
-			var pi = Math.PI, log = Math.log, sin = Math.sin,
-				big = 1 << 28,
-				big180 = big / 180,
-				pi180 = pi / 180,
-				radius = big / pi,
-				oldZoom = Infinity;
+			var crs = geo.crs  &&  geo.crs.type == 'name'  &&  geo.crs.properties.name || '';
+			var mercator = /EPSG:+3857$/.test( crs );
+			if( mercator ) {
+			}
+			else {
+				var pi = Math.PI, log = Math.log, sin = Math.sin,
+					big = 1 << 28,
+					big180 = big / 180,
+					pi180 = pi / 180,
+					radius = big / pi;
+			}
+			var oldZoom = Infinity;
 			
 			var totalPolys = 0, totalPoints = 0;
 			var nPlaces = features.length;
@@ -200,10 +206,17 @@ PolyGonzo = {
 				var featureZoom = feature.zoom != null ? feature.zoom : zoom;
 				if( featureZoom != oldZoom ) {
 					oldZoom = featureZoom;
-					var
-						divisor = Math.pow( 2, 21 - featureZoom ),
-						multX = big180 / divisor,
-						multY = -radius / divisor / 2;
+					if( mercator ) {
+						var
+							multX = Math.pow( 2, featureZoom ) / 156543.03392,
+							multY = -multX;
+					}
+					else {
+						var
+							divisor = Math.pow( 2, 21 - featureZoom ),
+							multX = big180 / divisor,
+							multY = -radius / divisor / 2;
+					}
 				}
 				
 				var featureOffset = feature.offset || offset,
@@ -211,14 +224,18 @@ PolyGonzo = {
 					offsetY  = featureOffset.y;
 				
 				if( geo.markers && feature.marker ) {
-					var marker = feature.marker, c = feature.properties.centroid;
+					var marker = feature.marker, c = feature.centroid;
 					var centroid = ( feature.centroids = feature.centroids || [] )[zoom];
 					if( ! centroid ) {
-						var s = sin( c[1] * pi180 );
-						centroid = feature.centroids[zoom] = [
-							multX * c[0],
-							multY * log( (1+s)/(1-s) )
-						];
+						if( mercator ) {
+						}
+						else {
+							var s = sin( c[1] * pi180 );
+							centroid = feature.centroids[zoom] = [
+								multX * c[0],
+								multY * log( (1+s)/(1-s) )
+							];
+						}
 					}
 					markHtml.push(
 						'<div style="position:absolute; overflow:hidden; width:', marker.size.x,
@@ -246,12 +263,22 @@ PolyGonzo = {
 					var coords = ( poly.coords = poly.coords || [] )[zoom];
 					if( ! coords ) {
 						coords = poly.coords[zoom] = new Array( nPoints );
-						for( var iPoint = -1, point;  point = points[++iPoint]; ) {
-							var s = sin( point[1] * pi180 );
-							coords[iPoint] = [
-								multX * point[0],
-								multY * log( (1+s)/(1-s) )
-							];
+						if( mercator ) {
+							for( var iPoint = -1, point;  point = points[++iPoint]; ) {
+								coords[iPoint] = [
+									multX * point[0],
+									multY * point[1]
+								];
+							}
+						}
+						else {
+							for( var iPoint = -1, point;  point = points[++iPoint]; ) {
+								var s = sin( point[1] * pi180 );
+								coords[iPoint] = [
+									multX * point[0],
+									multY * log( (1+s)/(1-s) )
+								];
+							}
 						}
 					}
 					if( coords.length > 2 ) {
