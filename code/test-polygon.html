@@ -24,6 +24,7 @@
 			"features": [
 				{
 					"type": "Feature",
+					"name": "Hawaii",
 					"bbox": [ -156.0620, 18.9209, -154.8078, 20.2737 ],
 					"geometry": {
 						"type": "Polygon",
@@ -87,10 +88,20 @@
 			feature.strokeColor = '#000000';
 			feature.strokeOpacity = 0.2;
 			feature.strokeWidth = 1;
-				
+			
+			var mouseFeature;
 			var gonzo = new PolyGonzo.PgOverlay({
 				map: map,
-				geo: geo
+				geo: geo,
+				events: {
+					mousemove: function( event, where ) {
+						var feature = where && where.feature
+						if( feature == mouseFeature ) return;
+						mouseFeature = feature;
+						map.setOptions({ draggableCursor: feature ? 'pointer' : null });
+						window.console && console.log( 'Over ', feature && feature.name || 'nowhere' );
+					}
+				}
 			});
 			gonzo.setMap( map );
 		}
