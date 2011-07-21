@@ -246,8 +246,8 @@ PolyGonzo = {
 				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
 					var geometry = feature.geometry, type = geometry.type;
 					var polys =
-						type == 'Polygon' ? [ feature.geometry.coordinates ] :
-						type == 'MultiPolygon' ? feature.geometry.coordinates :
+						type == 'Polygon' ? [ geometry.coordinates ] :
+						type == 'MultiPolygon' ? geometry.coordinates :
 						null;
 					if( ! polys ) continue;
 					var nPolys = polys.length;
@@ -432,7 +432,11 @@ PolyGonzo = {
 					) ) {
 						continue;
 					}
-					var polys = feature.geometry.coordinates;
+					var geometry = feature.geometry, type = geometry.type;
+					var polys =
+						type == 'Polygon' ? [ geometry.coordinates ] :
+						type == 'MultiPolygon' ? geometry.coordinates :
+						null;
 					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
 						if( contains( poly, featureX, featureY, hitZoom ) ) {
 							return { /*parent:entity,*/ feature:feature, poly:poly };
@@ -447,7 +451,7 @@ PolyGonzo = {
 			var inside = false;
 			for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
 				var coords = ring.coords[zoom];
-				if( ! coords ) continue;
+				if( ! coords  ||  coords.length < 3 ) continue;
 				
 				var v = coords[coords.length-1], x1 = v[0], y1 = v[1];
 			
