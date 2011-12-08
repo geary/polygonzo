@@ -73,6 +73,8 @@
 				Maps API version:
 				<select id="selectAPI">
 				</select>
+				(<span id="version"></span>)
+				
 				<script type="text/javascript">
 					(function() {
 						var $select = $('#selectAPI');
@@ -91,6 +93,10 @@
 								location.search = '?v=' + $select.val();
 							})
 							.val( apiver );
+						
+						$('#version').html(
+							window.G_API_VERSION || google.maps.version
+						);
 					})();
 				</script>
 				
