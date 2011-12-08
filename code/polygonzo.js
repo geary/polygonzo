@@ -296,7 +296,8 @@ PolyGonzo = {
 						offsetY  = featureOffset.y;
 					
 					if( geo.markers && feature.marker ) {
-						var marker = feature.marker, c = feature.centroid;
+						var marker = feature.marker,
+							c = feature.properties.centroid || feature.centroid;
 						var centroid = ( feature.centroids = feature.centroids || [] )[zoom];
 						if( ! centroid ) {
 							if( mercator ) {
