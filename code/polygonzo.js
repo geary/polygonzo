@@ -228,8 +228,7 @@ PolyGonzo = {
 			var totalFeatures = 0, totalPolys = 0, totalPoints = 0;
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
 				var features = geo.features;
-				var crs = geo.crs  &&  geo.crs.type == 'name'  &&  geo.crs.properties.name || '';
-				var mercator = /EPSG:+3857$/.test( crs );
+				var mercator = PolyGonzo.Mercator.isMercator(  geo );
 				if( mercator ) {
 				}
 				else {
@@ -468,6 +467,46 @@ PolyGonzo = {
 				}
 			}
 			return inside;
+		}
+	},
+	
+	// TODO: refactor some other code to use these, but watch performance
+	Mercator: {
+		coordToPixel: function( coord, zoom ) {
+			var multX = Math.pow( 2, zoom ) / 156543.03392;
+			var multY = -multX;
+			return [
+				multX * coord[0],
+				multY * coord[1]
+			];
+		},
+		
+		fitBbox: function( bbox, pix ) {
+			return Math.min(
+				this.getZoom( Math.abs( bbox[0] - bbox[2] ), pix.width ),
+				this.getZoom( Math.abs( bbox[1] - bbox[3] ), pix.height )
+			);
+		},
+		
+		getZoom: function( goog, pix ) {
+			function log2( n ) { return Math.log(n) / Math.LN2; }
+			return log2( pix / goog * 156543.03392 );
+		},
+		
+		isMercator: function( geo ) {
+			var crs =
+				geo.crs  &&
+				geo.crs.type == 'name'  &&
+				geo.crs.properties.name || '';
+			return /EPSG:+3857$/.test( crs );
+		},
+		
+		pixelToCoord: function( pixel, zoom ) {
+			//function log2( n ) { return Math.log(n) / Math.LN2; }
+			//
+			//
+			//multX = Math.pow( 2, zoom ) / 156543.03392,
+			//multY = -multX;
 		}
 	},
 	
