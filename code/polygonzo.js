@@ -181,8 +181,9 @@ PolyGonzo = {
 				style.WebkitTransform ||
 				style.msTransform ||
 				style.MozTransform ||
-				style.OTransform
-			);
+				style.OTransform ||
+				''
+			).replace( / /g, '' );
 		};
 		
 		this.getTransformOffset = function() {
@@ -193,11 +194,11 @@ PolyGonzo = {
 			if( ! parent ) return null;
 			var offsetter = parent.offsetParent;
 			var transform = this.getTransform( offsetter.style );
-			var match = transform && transform.match(
-				/translate\s*\(\s*(-?\d+)px\s*,\s*(-?\d+)px\s*\)/
+			var match = transform.match(
+				/matrix\(-?\d+,-?\d+,-?\d+,-?\d+,(-?\d+)(px)?,(-?\d+)(px)?\)/
 			);
 			var offset = match ?
-				{ x: +match[1], y: +match[2] } :
+				{ x: +match[1], y: +match[3] } :
 				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
 			offset.isTransform = !! match;
 			return offset;
