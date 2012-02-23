@@ -84,6 +84,7 @@ PolyGonzo = {
 			
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
+				ctx.lineJoin = 'bevel';
 				
 				eachPoly( geos, zoom, offset, function( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth ) {
 					var c = ctx;
@@ -145,7 +146,7 @@ PolyGonzo = {
 					vml[iVml++] = strokeColor;
 					vml[iVml++] = '" opacity="';
 					vml[iVml++] = strokeOpacity;
-					vml[iVml++] = '" joinstyle="miter" miterlimit="10" endcap="flat" weight="';
+					vml[iVml++] = '" joinstyle="bevel" weight="';
 					vml[iVml++] = strokeWidth;
 					vml[iVml++] = 'px" /><pgz_vml_:fill color="';
 					vml[iVml++] = fillColor;
