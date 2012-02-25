@@ -441,7 +441,7 @@ PolyGonzo = {
 						null;
 					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
 						if( contains( poly, featureX, featureY, hitZoom ) ) {
-							return { /*parent:entity,*/ feature:feature, poly:poly };
+							return { geo:geo, /*parent:entity,*/ feature:feature, poly:poly };
 						}
 					}
 				}
