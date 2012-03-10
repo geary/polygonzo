@@ -388,8 +388,9 @@ PolyGonzo = {
 		}
 		
 		function wireEvent( name ) {
-			tracker[ 'on' + name ] = function( e ) {
-				e = e || window.event;
+			tracker[ 'on' + name ] = function( event ) {
+				event = event || window.event;
+				var e = event.targetTouches && event.targetTouches[0] || event;
 				var offset = PolyGonzo.elementOffset( canvas );
 				if( ! offset ) return;
 				var x = -offset.left, y = -offset.top;
@@ -403,19 +404,22 @@ PolyGonzo = {
 					y += e.pageY;
 				}
 				else {
-					x += e.clientX +
-						document.body.scrollLeft +
-						document.documentElement.scrollLeft;
-					y += e.clientY +
-						document.body.scrollTop +
-						document.documentElement.scrollTop;
+					x +=
+						( e.clientX || 0 ) +
+						( document.body.scrollLeft || 0 ) +
+						( document.documentElement.scrollLeft || 0 );
+					y +=
+						( e.clientY || 0 ) +
+						( document.body.scrollTop || 0 ) +
+						( document.documentElement.scrollTop || 0 );
 				}
 				if(
 				   ! hitWhere  ||
 				   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
-				)
+				) {
 					hitWhere = hittest( x, y );
-				a.events[name]( e, hitWhere );
+				}
+				a.events[name]( event, hitWhere );
 			};
 		}
 		
