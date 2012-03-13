@@ -23,7 +23,7 @@ PolyGonzo = {
 			delete panes.overlayMouseTarget;
 		
 		var geos = a.geos || [ a.geo ];
-		var canvas, ctx, tracker, markers, zoom, offset;
+		var canvas, ctx, underlay, underlayer, tracker, markers, zoom, offset;
 		
 		if( PolyGonzo.isVML() ) {
 			canvas = document.createElement( 'div' );
@@ -31,6 +31,11 @@ PolyGonzo = {
 		else {
 			canvas = document.createElement( 'canvas' );
 			ctx = this.ctx = canvas.getContext('2d');
+		}
+		
+		if( a.underlay ) {
+			var underlayer = this.underlayer = addDiv( 'PolyGonzoUnderlay', panes.overlayLayer );
+			panes.overlayLayer.appendChild( underlayer );
 		}
 		
 		this.canvas = canvas;
@@ -80,8 +85,11 @@ PolyGonzo = {
 			hitWhere = null;
 			
 			zoom = b.zoom;
-			offset = b.offset;
+			offset = b.offset || { x:0, y:0 };
 			
+			if( a.underlay )
+				loadUnderlay( offset.x, offset.y );
+				
 			if( ctx ) {
 				ctx.clearRect( 0, 0, canvas.width, canvas.height );
 				ctx.lineJoin = 'bevel';
@@ -171,6 +179,7 @@ PolyGonzo = {
 		};
 		
 		this.remove = function() {
+			if( underlayer ) panes.overlayLayer.removeChild( underlayer );
 			if( canvas ) panes.overlayLayer.removeChild( canvas );
 			if( markers ) panes.overlayImage.removeChild( markers );
 			if( tracker ) panes.overlayMouseTarget.removeChild( tracker );
@@ -223,6 +232,30 @@ PolyGonzo = {
 				document.namespaces.add( 'pgz_vml_', 'urn:schemas-microsoft-com:vml', '#default#VML' );
 				document.createStyleSheet().cssText = 'pgz_vml_\\:*{behavior:url(#default#VML)}';
 			}
+		}
+		
+		function loadUnderlay( offsetX, offsetY ) {
+			underlay = a.underlay();
+			var html = [];
+			var images = underlay && underlay.images;
+			if( images ) {
+				for( var image, i = -1;  image = images[++i]; ) {
+					image.left += offsetX;
+					image.top += offsetY;
+					html.push(
+						'<div style="position:absolute; overflow:hidden; width:', image.width,
+								'px; height:', image.height,
+								'px; left:', image.left,
+								'px; top:', image.top,
+								'px;">',
+							'<img src="', image.src, '" style="width:', image.width,
+									'px; height:', image.height,
+									'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
+						'</div>'
+					);
+				}
+			}
+			underlayer.innerHTML = html.join('');
 		}
 		
 		function eachPoly( geos, zoom, offset, callback ) {
@@ -292,7 +325,10 @@ PolyGonzo = {
 						}
 					}
 					
-					var featureOffset = feature.offset || offset,
+					var featureOffset = feature.offset ? {
+						x: offset.x + feature.offset.x,
+						y: offset.y + feature.offset.y
+					} : offset,
 						offsetX = featureOffset.x,
 						offsetY  = featureOffset.y;
 					
@@ -414,7 +450,7 @@ PolyGonzo = {
 						( document.documentElement.scrollTop || 0 );
 				}
 				if(
-				   ! hitWhere  ||
+				   ! hitWhere  ||  ! hitWhere.poly  ||
 				   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
 				) {
 					hitWhere = hittest( x, y );
@@ -424,6 +460,19 @@ PolyGonzo = {
 		}
 		
 		function hittest( x, y ) {
+			var images = underlay && underlay.hittest && underlay.images;
+			if( images ) {
+				for( var image, i = -1;  image = images[++i]; ) {
+					if(
+					   x >= image.left  &&  x < image.left + image.width  &&
+					   y >= image.top  &&  y < image.top + image.height
+					) {
+						var hit = underlay.hittest( x - image.left, y - image.top );
+						if( hit )
+							return hit;
+					}
+				}
+			}
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
 				if( geo.hittest === false ) continue;
 				var features = geo.features;
@@ -517,7 +566,7 @@ PolyGonzo = {
 	
 	// PolyGonzo.PgOverlay() - Google Maps JavaScript API V2/V3 overlay
 	PgOverlay: function( a ) {
-		var map = a.map, pane, frame, canvas, markers, tracker, moveListener, zoomListener;
+		var map = a.map, pane, frame, canvas, underlayer, markers, tracker, moveListener, zoomListener;
 		
 		var gm = google.maps;
 		var v2 = ! gm.event;
@@ -588,10 +637,12 @@ PolyGonzo = {
 			frame = new PolyGonzo.Frame({
 				panes: panes,
 				//group: a.group,
+				underlay: a.underlay,
 				geos: a.geos || [ a.geo ],
 				events: a.events
 			});
 			canvas = frame.canvas;
+			underlayer = frame.underlayer;
 			markers = frame.markers;
 			tracker = frame.tracker;
 		}
@@ -628,6 +679,7 @@ PolyGonzo = {
 			}
 			
 			move( canvas );
+			move( underlayer );
 			move( markers );
 			move( tracker );
 			
