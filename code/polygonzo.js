@@ -242,17 +242,19 @@ PolyGonzo = {
 				for( var image, i = -1;  image = images[++i]; ) {
 					image.left += offsetX;
 					image.top += offsetY;
-					html.push(
-						'<div style="position:absolute; overflow:hidden; width:', image.width,
-								'px; height:', image.height,
-								'px; left:', image.left,
-								'px; top:', image.top,
-								'px;">',
-							'<img src="', image.src, '" style="width:', image.width,
+					if( image.src ) {
+						html.push(
+							'<div style="position:absolute; overflow:hidden; width:', image.width,
 									'px; height:', image.height,
-									'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
-						'</div>'
-					);
+									'px; left:', image.left,
+									'px; top:', image.top,
+									'px;">',
+								'<img src="', image.src, '" style="width:', image.width,
+										'px; height:', image.height,
+										'px; border:none; position:absolute; left:0; top:0; margin:0; padding:0;" />',
+							'</div>'
+						);
+					}
 				}
 			}
 			underlayer.innerHTML = html.join('');
@@ -467,7 +469,7 @@ PolyGonzo = {
 					   x >= image.left  &&  x < image.left + image.width  &&
 					   y >= image.top  &&  y < image.top + image.height
 					) {
-						var hit = underlay.hittest( x - image.left, y - image.top );
+						var hit = underlay.hittest( image, x - image.left, y - image.top );
 						if( hit )
 							return hit;
 					}
