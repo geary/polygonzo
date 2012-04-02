@@ -118,11 +118,11 @@ PolyGonzo = {
 					c.stroke();
 					
 					c.globalAlpha = fillOpacity;
-					if( fillColor.src ) {
-						var pattern = patterns[fillColor.src];
+					if( fillColor.image ) {
+						var pattern = patterns[fillColor.image.src];
 						if( ! pattern ) {
-							pattern = patterns[fillColor.src] =
-								c.createPattern( fillColor.src, 'repeat' );
+							pattern = patterns[fillColor.image.src] =
+								c.createPattern( fillColor.image, 'repeat' );
 						}
 						c.fillStyle = pattern;
 					}
@@ -168,9 +168,9 @@ PolyGonzo = {
 					vml[iVml++] = '" joinstyle="bevel" weight="';
 					vml[iVml++] = strokeWidth;
 					vml[iVml++] = 'px" /><pgz_vml_:fill ';
-					if( fillColor.src ) {
+					if( fillColor.image ) {
 						vml[iVml++] = 'alignshape="False" type="tile" src="';
-						vml[iVml++] = fillColor.src;
+						vml[iVml++] = fillColor.image.src;
 					}
 					else {
 						vml[iVml++] = 'color="';
