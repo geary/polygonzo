@@ -24,6 +24,7 @@ PolyGonzo = {
 		
 		var geos = a.geos || [ a.geo ];
 		var canvas, ctx, underlay, underlayer, tracker, markers, zoom, offset;
+		var patterns = {};
 		
 		if( PolyGonzo.isVML() ) {
 			canvas = document.createElement( 'div' );
@@ -117,7 +118,17 @@ PolyGonzo = {
 					c.stroke();
 					
 					c.globalAlpha = fillOpacity;
-					c.fillStyle = fillColor;
+					if( fillColor.src ) {
+						var pattern = patterns[fillColor.src];
+						if( ! pattern ) {
+							pattern = patterns[fillColor.src] =
+								c.createPattern( fillColor.src, 'repeat' );
+						}
+						c.fillStyle = pattern;
+					}
+					else {
+						c.fillStyle = fillColor;
+					}
 					c.fill();
 				});
 			}
@@ -156,8 +167,15 @@ PolyGonzo = {
 					vml[iVml++] = strokeOpacity;
 					vml[iVml++] = '" joinstyle="bevel" weight="';
 					vml[iVml++] = strokeWidth;
-					vml[iVml++] = 'px" /><pgz_vml_:fill color="';
-					vml[iVml++] = fillColor;
+					vml[iVml++] = 'px" /><pgz_vml_:fill ';
+					if( fillColor.src ) {
+						vml[iVml++] = 'alignshape="False" type="tile" src="';
+						vml[iVml++] = fillColor.src;
+					}
+					else {
+						vml[iVml++] = 'color="';
+						vml[iVml++] = fillColor;
+					}
 					vml[iVml++] = '" opacity="';
 					vml[iVml++] = fillOpacity;
 					vml[iVml++] = '" /></pgz_vml_:shape>';
@@ -165,7 +183,7 @@ PolyGonzo = {
 				vml = vml.join('');
 				//log( 'joined VML' );
 				
-				//log( htmlEscape( vml.join('') ) );
+				//log( htmlEscape(vml) );
 				var el = canvas.ownerDocument.createElement( 'div' );
 				el.className = 'PolyGonzoVmlOuter';
 				el.style.width =  canvas.clientWidth + 'px';
@@ -410,7 +428,7 @@ PolyGonzo = {
 			
 			// Add a dummy polygon at the end to fix missing final poly in IE8
 			if( PolyGonzo.isVML() )
-				callback( offsetX, offsetY, {}, {}, [], 0, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+				callback( offsetX, offsetY, {}, {}, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
 			if( markers )
 				markers.innerHTML =
