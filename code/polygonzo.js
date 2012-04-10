@@ -469,12 +469,12 @@ PolyGonzo = {
 						( document.body.scrollTop || 0 ) +
 						( document.documentElement.scrollTop || 0 );
 				}
-				if(
-				   ! hitWhere  ||  ! hitWhere.poly  ||
-				   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
-				) {
+				//if(
+				//   ! hitWhere  ||  ! hitWhere.poly  ||
+				//   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
+				//) {
 					hitWhere = hittest( x, y );
-				}
+				//}
 				a.events[name]( event, hitWhere );
 			};
 		}
@@ -498,7 +498,10 @@ PolyGonzo = {
 				var features = geo.features;
 				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
 					hitZoom = feature.zoom != null ? feature.zoom : zoom;
-					hitOffset = feature.offset || offset;
+					hitOffset = feature.offset ? {
+						x: offset.x + feature.offset.x,
+						y: offset.y + feature.offset.y
+					} : offset;
 					var featureX = x - hitOffset.x, featureY = y - hitOffset.y;
 					var box = feature.boxes[hitZoom];
 					if( box && (
