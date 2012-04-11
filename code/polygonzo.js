@@ -532,11 +532,11 @@ PolyGonzo = {
 				if( ! coords  ||  coords.length < 3 ) continue;
 				
 				var v = coords[coords.length-1], x1 = v[0], y1 = v[1];
-			
+				
 				for( var i = -1;  v = coords[++i]; ) {
 					var x2 = v[0], y2 = v[1];
 					
-					if( ( y1 < y  &&  y2 >= y ) || ( y2 < y  &&  y1 >= y ) )
+					if( ( y1 < y ) != ( y2 < y ) )
 						if ( x1 + ( y - y1 ) / ( y2 - y1 ) * ( x2 - x1 ) < x )
 							inside = ! inside;
 					
