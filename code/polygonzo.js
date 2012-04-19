@@ -470,12 +470,12 @@ PolyGonzo = {
 						( document.body.scrollTop || 0 ) +
 						( document.documentElement.scrollTop || 0 );
 				}
-				if(
-				   ! hitWhere  ||  ! hitWhere.poly  ||
-				   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
-				) {
+				//if(
+				//   ! hitWhere  ||  ! hitWhere.poly  ||
+				//   ! contains( hitWhere.poly, x - hitOffset.x, y - hitOffset.y, hitZoom )
+				//) {
 					hitWhere = hittest( x, y );
-				}
+				//}
 				a.events[name]( event, hitWhere );
 			};
 		}
