@@ -281,6 +281,7 @@ PolyGonzo = {
 		function eachPoly( geos, zoom, offset, callback ) {
 			var totalFeatures = 0, totalPolys = 0, totalPoints = 0;
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
+				var thecallback = ( geo.draw === false ? function() {} : callback );
 				var features = geo.features;
 				var mercator = PolyGonzo.Mercator.isMercator(  geo );
 				if( mercator ) {
@@ -421,14 +422,14 @@ PolyGonzo = {
 							}
 						}
 						if( haveRing )
-							callback( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+							thecallback( offsetX, offsetY, feature, poly, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 					}
 				}
 			}
 			
 			// Add a dummy polygon at the end to fix missing final poly in IE8
 			if( PolyGonzo.isVML() )
-				callback( offsetX, offsetY, {}, {}, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
+				thecallback( offsetX, offsetY, {}, {}, fillColor, fillOpacity, strokeColor, strokeOpacity, strokeWidth );
 			
 			if( markers )
 				markers.innerHTML =
