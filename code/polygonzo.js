@@ -683,7 +683,8 @@ PolyGonzo = {
 				a.log( 'Drawing...' );
 			}
 			
-			var margin = { x: width / 3, y: height / 3 };
+			//var margin = { x: width / 3, y: height / 3 };
+			var margin = { x: 0, y: 0 };
 			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
 			var offset = frame.getTransformOffset();
