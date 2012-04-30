@@ -232,19 +232,6 @@ PolyGonzo = {
 			return offset;
 		};
 		
-/*	Untested and out of date
-		this.latLngToPixel = function( lat, lng, zoom, offset ) {
-			debugger;
-			var point = [lng,lat];
-			offset = offset || { x:0, y:0 };
-			var poly = { points: [ [lng,lat] ] };
-			var feature = { polys: [ poly ] };
-			eachPoly( [ feature ], zoom, offset, function() {} );
-			var coord = poly.coords[zoom][0];
-			return { x: ~~coord[0], y: ~~coord[1] };
-		};
-*/
-		
 		function onetime() {
 			if( PolyGonzo.isVML()  &&  ! document.namespaces.pgz_vml_ ) {
 				document.namespaces.add( 'pgz_vml_', 'urn:schemas-microsoft-com:vml', '#default#VML' );
