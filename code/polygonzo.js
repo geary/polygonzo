@@ -377,6 +377,13 @@ PolyGonzo = {
 						haveRing = false;
 					
 					for( var poly, iPoly = -1;  poly = polys[++iPoly]; ) {
+						var polyOffset = poly.offset ? {
+							x: offset.x + poly.offset.x,
+							y: offset.y + poly.offset.y
+						} : featureOffset,
+							offsetX = polyOffset.x,
+							offsetY  = polyOffset.y;
+						
 						for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
 							var nPoints = ring.length;
 							totalPoints += nPoints;
