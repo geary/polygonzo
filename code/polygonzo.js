@@ -268,7 +268,6 @@ PolyGonzo = {
 		function eachPoly( geos, zoom, offset, callback ) {
 			var totalFeatures = 0, totalPolys = 0, totalPoints = 0;
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
-				var thecallback = ( geo.draw === false ? function() {} : callback );
 				var features = geo.features;
 				var mercator = PolyGonzo.Mercator.isMercator(  geo );
 				if( mercator ) {
@@ -286,6 +285,10 @@ PolyGonzo = {
 				var markHtml = [];
 				
 				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
+					var thecallback =
+						geo.draw === false  ||  feature.draw === false ?
+							function() {} :
+							callback;
 					var geometry = feature.geometry, type = geometry.type;
 					var polys =
 						type == 'Polygon' ? [ geometry.coordinates ] :
