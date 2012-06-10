@@ -266,6 +266,7 @@ PolyGonzo = {
 		}
 		
 		function eachPoly( geos, zoom, offset, callback ) {
+			var offsetX = offset.x, offsetY = offset.y;
 			var totalFeatures = 0, totalPolys = 0, totalPoints = 0;
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
 				var features = geo.features;
@@ -314,34 +315,37 @@ PolyGonzo = {
 						}
 					}
 					
+					var featureOffsetX = 0, featureOffsetY = 0;
+					if( feature.offset ) {
+						featureOffsetX = feature.offset.x;
+						featureOffsetY = feature.offset.y;
+					}
+					
 					var bbox = feature.bbox;
 					if( bbox ) {
 						var box = ( feature.boxes = feature.boxes || [] )[zoom];
 						if( ! box ) {
 							if( mercator ) {
 								box = [
-									multX * bbox[0], multY * bbox[1],
-									multX * bbox[2], multY * bbox[3]
+									featureOffsetX + multX * bbox[0],
+									featureOffsetY + multY * bbox[1],
+									featureOffsetX + multX * bbox[2],
+									featureOffsetY + multY * bbox[3]
 								];
 							}
 							else {
 								var s1 = sin( bbox[1] * pi180 );
 								var s3 = sin( bbox[3] * pi180 );
 								box = [
-									multX * bbox[0], multY * log( (1+s1) / (1-s1) ),
-									multX * bbox[2], multY * log( (1+s3) / (1-s3) )
+									featureOffsetX + multX * bbox[0],
+									featureOffsetY + multY * log( (1+s1) / (1-s1) ),
+									featureOffsetX + multX * bbox[2],
+									featureOffsetY + multY * log( (1+s3) / (1-s3) )
 								];
 							}
 							feature.boxes[zoom] = box;
 						}
 					}
-					
-					var featureOffset = feature.offset ? {
-						x: offset.x + feature.offset.x,
-						y: offset.y + feature.offset.y
-					} : offset,
-						offsetX = featureOffset.x,
-						offsetY  = featureOffset.y;
 					
 					if( geo.markers && feature.marker ) {
 						var marker = feature.marker,
@@ -361,8 +365,8 @@ PolyGonzo = {
 						markHtml.push(
 							'<div style="position:absolute; overflow:hidden; width:', marker.size.x,
 									'px; height:', marker.size.y,
-									'px; left:', centroid[0] - marker.anchor.x + offsetX,
-									'px; top:', centroid[1] - marker.anchor.y + offsetY,
+									'px; left:', centroid[0] - marker.anchor.x + offsetX + featureOffsetX,
+									'px; top:', centroid[1] - marker.anchor.y + offsetY + featureOffsetY,
 									'px;">',
 								'<img src="', marker.url, '" style="width:', marker.size.x,
 										'px; height:', marker.size.y,
@@ -380,12 +384,11 @@ PolyGonzo = {
 						haveRing = false;
 					
 					for( var poly, iPoly = -1;  poly = polys[++iPoly]; ) {
-						var polyOffset = poly.offset ? {
-							x: offset.x + poly.offset.x,
-							y: offset.y + poly.offset.y
-						} : featureOffset,
-							offsetX = polyOffset.x,
-							offsetY  = polyOffset.y;
+						var polyOffsetX = featureOffsetX, polyOffsetY = featureOffsetY;
+						if( poly.offset ) {
+							polyOffsetX = poly.offset.x;
+							polyOffsetY = poly.offset.y;
+						}
 						
 						for( var ring, iRing = -1;  ring = poly[++iRing]; ) {
 							var nPoints = ring.length;
@@ -396,8 +399,8 @@ PolyGonzo = {
 								if( mercator ) {
 									for( var iPoint = -1, point;  point = ring[++iPoint]; ) {
 										coords[iPoint] = [
-											multX * point[0],
-											multY * point[1]
+											polyOffsetX + multX * point[0],
+											polyOffsetY + multY * point[1]
 										];
 									}
 								}
@@ -405,8 +408,8 @@ PolyGonzo = {
 									for( var iPoint = -1, point;  point = ring[++iPoint]; ) {
 										var s = sin( point[1] * pi180 );
 										coords[iPoint] = [
-											multX * point[0],
-											multY * log( (1+s)/(1-s) )
+											polyOffsetX + multX * point[0],
+											polyOffsetY + multY * log( (1+s)/(1-s) )
 										];
 									}
 								}
@@ -491,20 +494,16 @@ PolyGonzo = {
 					}
 				}
 			}
+			x -= offset.x;
+			y -= offset.y;
 			for( var geo, iGeo = -1;  geo = geos[++iGeo]; ) {
 				if( geo.hittest === false ) continue;
 				var features = geo.features;
 				for( var iFeature = -1, feature;  feature = features[++iFeature]; ) {
-					hitZoom = feature.zoom != null ? feature.zoom : zoom;
-					hitOffset = feature.offset ? {
-						x: offset.x + feature.offset.x,
-						y: offset.y + feature.offset.y
-					} : offset;
-					var featureX = x - hitOffset.x, featureY = y - hitOffset.y;
-					var box = feature.boxes[hitZoom];
+					var box = feature.boxes[zoom];
 					if( box && (
-					   featureX < box[0]  ||  featureX > box[2]  ||
-					   featureY < box[3]  ||  featureY > box[1]
+					   x < box[0]  ||  x > box[2]  ||
+					   y < box[3]  ||  y > box[1]
 					) ) {
 						continue;
 					}
@@ -514,7 +513,7 @@ PolyGonzo = {
 						type == 'MultiPolygon' ? geometry.coordinates :
 						null;
 					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
-						if( contains( poly, featureX, featureY, hitZoom ) ) {
+						if( contains( poly, x, y, zoom ) ) {
 							return { geo:geo, /*parent:entity,*/ feature:feature, poly:poly };
 						}
 					}
