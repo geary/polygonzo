@@ -546,6 +546,15 @@ PolyGonzo = {
 	
 	// TODO: refactor some other code to use these, but watch performance
 	Mercator: {
+		coordToLngLat: function( coord ) {
+			var pi = Math.PI, pi180 = pi / 180, radius = 6378137,
+				x = coord[0], y = coord[1];
+			return [
+				x / ( radius * pi180 ),
+				( 2 * Math.atan( Math.exp( y / radius ) ) - pi / 2 ) / pi180
+			];
+		},
+		
 		coordToPixel: function( coord, zoom ) {
 			var multX = Math.pow( 2, zoom ) / 156543.03392;
 			var multY = -multX;
@@ -573,6 +582,15 @@ PolyGonzo = {
 				geo.crs.type == 'name'  &&
 				geo.crs.properties.name || '';
 			return /EPSG:+3857$/.test( crs );
+		},
+		
+		lngLatToCoord: function( ll ) {
+			var pi = Math.PI, pi180 = pi / 180, radius = 6378137,
+				lng = ll[0], lat = ll[1];
+			return [
+				radius * pi180 * lng,
+				radius * Math.log( Math.tan( ( 90 + lat ) * pi180 / 2 ) )
+			];
 		},
 		
 		pixelToCoord: function( pixel, zoom ) {
