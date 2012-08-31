@@ -514,7 +514,12 @@ PolyGonzo = {
 						null;
 					for( var iPoly = -1, poly;  poly = polys[++iPoly]; ) {
 						if( contains( poly, x, y, zoom ) ) {
-							return { geo:geo, /*parent:entity,*/ feature:feature, poly:poly };
+							return feature.hittest !== false  &&  {
+								geo:geo,
+								/*parent:entity,*/
+								feature:feature,
+								poly:poly
+							};
 						}
 					}
 				}
