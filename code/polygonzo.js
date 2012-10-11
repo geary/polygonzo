@@ -1,8 +1,5 @@
-// polygonzo.js
-// By Ernest Delgado and Michael Geary
-// http://ernestdelgado.com/
-// http://mg.to/
-// See UNLICENSE or http://unlicense.org/ for public domain notice
+// polygonzo.js by Ernest Delgado and Michael Geary
+// Use under the Unlicense or the MIT License: see LICENSE for details
 
 PolyGonzo = {
 	

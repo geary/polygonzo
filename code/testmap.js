@@ -1,6 +1,5 @@
-// testmap.js
-// By Michael Geary - http://mg.to/
-// See UNLICENSE or http://unlicense.org/ for public domain notice
+// testmap.js by Michael Geary
+// Use under the Unlicense or the MIT License: see LICENSE for details
 
 // Outer wrapper function
 (function( $ ) {

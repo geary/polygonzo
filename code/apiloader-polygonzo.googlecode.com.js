@@ -1,6 +1,5 @@
-// apiloader-polygonzo.googlecode.com.js
-// By Michael Geary - http://mg.to/
-// See UNLICENSE or http://unlicense.org/ for public domain notice
+// apiloader-polygonzo.googlecode.com.js by Michael Geary
+// Use under the Unlicense or the MIT License: see LICENSE for details
 
 // To run the PolyGonzo code in a different domain, copy this file
 // to a new file with a name like this:
