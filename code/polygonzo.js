@@ -334,12 +334,14 @@ PolyGonzo = {
 								];
 							}
 							else {
+								var w = bbox[0], e = bbox[2];
+								if( w > e ) w -= 360;
 								var s1 = sin( bbox[1] * pi180 );
 								var s3 = sin( bbox[3] * pi180 );
 								box = [
-									featureOffsetX + multX * bbox[0],
+									featureOffsetX + multX * w,
 									featureOffsetY + multY * log( (1+s1) / (1-s1) ),
-									featureOffsetX + multX * bbox[2],
+									featureOffsetX + multX * e,
 									featureOffsetY + multY * log( (1+s3) / (1-s3) )
 								];
 							}
