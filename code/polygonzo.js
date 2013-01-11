@@ -211,22 +211,13 @@ PolyGonzo = {
 			).replace( / /g, '' );
 		};
 		
-		this.getTransformOffset = function() {
-			// Get the drawing offset from the grandparent element,
-			// either from the -webkit-transform style or offsetLeft/Top.
-			// TODO: Find a way to do this without using Maps API internals.
-			var parent = canvas.offsetParent;
-			if( ! parent ) return null;
-			var offsetter = parent.offsetParent;
-			var transform = this.getTransform( offsetter.style );
-			var match = transform.match(
-				/matrix\(-?\d+,-?\d+,-?\d+,-?\d+,(-?\d+)(px)?,(-?\d+)(px)?\)/
-			);
-			var offset = match ?
-				{ x: +match[1], y: +match[3] } :
-				{ x: offsetter.offsetLeft, y: offsetter.offsetTop };
-			offset.isTransform = !! match;
-			return offset;
+		this.getOffsets = function() {
+			if( ! this.converter ) return null;
+			var ll00 = new google.maps.LatLng( 0, 0 );
+			var canvas = this.converter.fromLatLngToDivPixel( ll00 );
+			var container = this.converter.fromLatLngToContainerPixel( ll00 );
+			var pan = { x: container.x - canvas.x, y: container.y - canvas.y };
+			return { canvas:canvas, container:container, pan:pan };
 		};
 		
 		function onetime() {
@@ -450,11 +441,10 @@ PolyGonzo = {
 				var offset = PolyGonzo.elementOffset( canvas );
 				if( ! offset ) return;
 				var x = -offset.left, y = -offset.top;
-				var transform = frame.getTransformOffset();
-				if( transform.isTransform ) {
-					x -= transform.x;
-					y -= transform.y;
-				}
+				var offsets = frame.getOffsets();
+				if( ! offsets ) return;
+				x -= offsets.pan.x;
+				y -= offsets.pan.y;
 				if( e.pageX || e.pageY ) {
 					x += e.pageX;
 					y += e.pageY;
@@ -705,8 +695,9 @@ PolyGonzo = {
 			var margin = { x: 0, y: 0 };
 			var canvasSize = { width: width + margin.x * 2, height: height + margin.y * 2 };
 			
-			var offset = frame.getTransformOffset();
-			if( ! offset ) return;
+			frame.converter = converter;
+			var offsets = frame.getOffsets();
+			if( ! offsets ) return;
 			
 			function move( element ) {
 				if( ! element ) return;
@@ -717,8 +708,8 @@ PolyGonzo = {
 				element.style.width = canvasSize.width + 'px';
 				element.style.height = canvasSize.height + 'px';	
 				
-				element.style.left = ( - offset.x - margin.x ) + 'px';
-				element.style.top = ( - offset.y - margin.y ) + 'px';
+				element.style.left = -( offsets.pan.x + margin.x ) + 'px';
+				element.style.top = -( offsets.pan.y + margin.y ) + 'px';
 			}
 			
 			move( canvas );
@@ -726,14 +717,11 @@ PolyGonzo = {
 			move( markers );
 			move( tracker );
 			
-			var zero = converter.fromLatLngToDivPixel(
-				new gm.LatLng( 0, 0 )
-			);
-			offset.x += margin.x + zero.x;
-			offset.y += margin.y + zero.y;
-			
 			frame.draw({
-				offset: offset,
+				offset: {
+					x: offsets.container.x + margin.x,
+					y: offsets.container.y + margin.y
+				},
 				zoom: map.getZoom()
 			});
 			
