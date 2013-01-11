@@ -600,59 +600,32 @@ PolyGonzo = {
 	PgOverlay: function( a ) {
 		var map = a.map, pane, frame, canvas, underlayer, markers, tracker, moveListener, zoomListener;
 		
-		var gm = google.maps;
-		var v2 = ! gm.event;
-		if( v2 ) {
-			var gme = gm.Event, pg = new gm.Overlay;
-			
-			pg.initialize = function( map_ ) {
-				map = map_;
-				moveListener = gme.addListener( map, 'moveend', function() {
-					pg.redraw( null, true );
-				});
-				var pane = map.getPane( G_MAP_MAP_PANE );
-				init({
-					overlayLayer: pane,
-					overlayImage: pane,
-					overlayMouseTarget: a.events && pane
-				});
-			};
-			
-			pg.remove = remove;
-			
-			pg.redraw = function( force1, force2 ) {
-				var size = map.getSize();
-				if( force1 || force2 ) draw( map, size.width, size.height );
-			};
-		}
-		else {  // v3
-			var gme = gm.event, pg = new gm.OverlayView;
-			
-			pg.onAdd = function() {
-				function listener() {
-					if( ! map._PolyGonzo_fitting )
-						pg.onAddOneshot( pg.draw, 100 );
-				}
-				moveListener = gme.addListener( map, 'bounds_changed', listener );
-				// TODO: This shouldn't be necessary - bounds_changed is
-				// supposed to be sufficient. But it doesn't always redraw if
-				//  you zoom without moving the map. The oneshot timer
-				// shouldn't be needed either.
-				zoomListener = gme.addListener( map, 'zoom_changed', listener );
-				var p = pg.getPanes();
-				init({
-					overlayLayer: p.overlayLayer,
-					overlayImage: p.overlayImage,
-					overlayMouseTarget: p.overlayMouseTarget
-				});
-			};
-			
-			pg.onRemove = remove;
-			
-			pg.draw = function() {
-				var div = map.getDiv();
-				draw( pg.getProjection(), div.clientWidth, div.clientHeight );
-			};
+		var gm = google.maps, gme = gm.event, pg = new gm.OverlayView;
+		
+		pg.onAdd = function() {
+			function listener() {
+				if( ! map._PolyGonzo_fitting )
+					pg.onAddOneshot( pg.draw, 100 );
+			}
+			moveListener = gme.addListener( map, 'bounds_changed', listener );
+			// TODO: This shouldn't be necessary - bounds_changed is
+			// supposed to be sufficient. But it doesn't always redraw if
+			//  you zoom without moving the map. The oneshot timer
+			// shouldn't be needed either.
+			zoomListener = gme.addListener( map, 'zoom_changed', listener );
+			var p = pg.getPanes();
+			init({
+				overlayLayer: p.overlayLayer,
+				overlayImage: p.overlayImage,
+				overlayMouseTarget: p.overlayMouseTarget
+			});
+		};
+		
+		pg.onRemove = remove;
+		
+		pg.draw = function() {
+			var div = map.getDiv();
+			draw( pg.getProjection(), div.clientWidth, div.clientHeight );
 		};
 		
 		pg.onAddOneshot = Oneshot();
