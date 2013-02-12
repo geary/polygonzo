@@ -438,13 +438,9 @@ PolyGonzo = {
 			tracker[ 'on' + name ] = function( event ) {
 				event = event || window.event;
 				var e = event.targetTouches && event.targetTouches[0] || event;
-				var offset = PolyGonzo.elementOffset( canvas );
+				var offset = PolyGonzo.elementOffset( tracker );
 				if( ! offset ) return;
 				var x = -offset.left, y = -offset.top;
-				var offsets = frame.getOffsets();
-				if( ! offsets ) return;
-				x -= offsets.pan.x;
-				y -= offsets.pan.y;
 				if( e.pageX || e.pageY ) {
 					x += e.pageX;
 					y += e.pageY;
@@ -716,6 +712,17 @@ PolyGonzo = {
 		while( e ) {
 			left += e.offsetLeft;
 			top += e.offsetTop;
+			var transform = e.style.webkitTransform;
+			if( transform ) {
+				// Maps V3 uses -webkit-transform:matrix() in some browsers
+				var match = transform.match(
+					/matrix *\( *1, *0, *0, *1, *([-\.\d]+), *([-\.\d]+) *\)/
+				);
+				if( match ) {
+					left += +match[1];
+					top += +match[2];
+				}
+			}
 			e = e.offsetParent;
 		}
 		return { left:left, top:top };
